@@ -54,6 +54,7 @@ export interface Challenge {
   introAudioFileName?: string;
   introDurationSec?: number; // duration of custom intro audio in seconds
   audioLoopEndSec?: number; // loop end point for custom audio in seconds
+  baseBpm?: number; // native recording tempo of custom audio in BPM (e.g. 182.8 for beat.mp3)
   introStyle?: IntroStyleType;
   shuffleCards?: boolean; // whether to shuffle cards order each level
   isCustom?: boolean;

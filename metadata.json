@@ -1,5 +1,5 @@
 {
-  "name": "Say The Word On Beat",
+  "name": "Speak on the Beat",
   "description": "Rhythm-based party challenge game where you speak words in sync with the beat across accelerating levels, custom cards, and audio tempos.",
   "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

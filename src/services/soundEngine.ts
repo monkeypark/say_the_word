@@ -11,6 +11,7 @@ export interface RoundSessionOptions {
   audioOffsetSec?: number;
   introDurationSec?: number;
   audioLoopEndSec?: number;
+  baseBpm?: number;
   onIntroBeat?: (currentIntroBeat: number, totalIntroBeats: number, audioTime: number) => void;
   onGameBeat?: (cardIndex: number, currentBeatInRound: number, audioTime: number) => void;
   onRoundComplete?: (nextBeatTime: number) => void;
@@ -19,7 +20,7 @@ export interface RoundSessionOptions {
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private isRunning: boolean = false;
-  private currentBpm: number = 120;
+  private currentBpm: number = 160;
   private soundPack: SoundPackType = 'whistle';
   private metronomeAccent: MetronomeAccentType = 'woodblock';
   private masterGain: GainNode | null = null;
@@ -107,7 +108,7 @@ class SoundEngine {
   }
 
   public setBpm(bpm: number) {
-    this.currentBpm = Math.max(60, Math.min(260, bpm));
+    this.currentBpm = Math.max(40, Math.min(260, bpm));
   }
 
   public getBpm(): number {
@@ -229,6 +230,7 @@ class SoundEngine {
   private customAudioBuffer: AudioBuffer | null = null;
   private customAudioSource: AudioBufferSourceNode | null = null;
   private currentCustomAudioUrl: string | null = null;
+  private pendingAudioDecode: Promise<boolean> | null = null;
 
   public async loadCustomAudio(urlOrDataUri: string): Promise<boolean> {
     this.init();
@@ -236,28 +238,52 @@ class SoundEngine {
     if (this.currentCustomAudioUrl === urlOrDataUri && this.customAudioBuffer) {
       return true; // Already loaded and decoded
     }
-    try {
-      let resolvedUrl = urlOrDataUri;
-      if (
-        urlOrDataUri.startsWith('/') &&
-        !urlOrDataUri.startsWith('//') &&
-        !urlOrDataUri.startsWith('data:') &&
-        !urlOrDataUri.startsWith('blob:')
-      ) {
-        const base = import.meta.env.BASE_URL || './';
-        resolvedUrl = base.endsWith('/')
-          ? `${base}${urlOrDataUri.slice(1)}`
-          : `${base}/${urlOrDataUri.slice(1)}`;
-      }
-      const response = await fetch(resolvedUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      this.customAudioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
-      this.currentCustomAudioUrl = urlOrDataUri;
-      return true;
-    } catch (e) {
-      console.warn('Failed to decode user audio track:', e);
-      return false;
+    if (this.pendingAudioDecode && this.currentCustomAudioUrl === urlOrDataUri) {
+      return this.pendingAudioDecode;
     }
+
+    this.pendingAudioDecode = (async () => {
+      try {
+        let resolvedUrl = urlOrDataUri;
+        if (
+          urlOrDataUri.startsWith('/') &&
+          !urlOrDataUri.startsWith('//') &&
+          !urlOrDataUri.startsWith('data:') &&
+          !urlOrDataUri.startsWith('blob:')
+        ) {
+          const base = import.meta.env.BASE_URL || './';
+          resolvedUrl = base.endsWith('/')
+            ? `${base}${urlOrDataUri.slice(1)}`
+            : `${base}/${urlOrDataUri.slice(1)}`;
+        }
+        const response = await fetch(resolvedUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        if (this.ctx) {
+          this.customAudioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+          this.currentCustomAudioUrl = urlOrDataUri;
+
+          // If a session is actively running during the intro phase and customAudioSource hasn't started yet, launch it immediately!
+          if (this.isRunning && this.activeSession && this.beatIndex < this.activeSession.introBeats && !this.customAudioSource) {
+            const session = this.activeSession;
+            const secondsPerBeat = 60.0 / this.currentBpm;
+            const baseBpm = session.baseBpm || (session.customAudioUrl?.includes('beat.mp3') ? 182.8 : session.bpm);
+            const rate = (baseBpm && baseBpm > 0) ? (session.bpm / baseBpm) : 1.0;
+            const introElapsedSec = this.beatIndex * secondsPerBeat;
+            const audioOffset = introElapsedSec * rate;
+            this.playCustomTrack(this.ctx.currentTime, audioOffset, 1.0, undefined, rate);
+          }
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.warn('Failed to decode user audio track:', e);
+        return false;
+      } finally {
+        this.pendingAudioDecode = null;
+      }
+    })();
+
+    return this.pendingAudioDecode;
   }
 
   private customAudioGain: GainNode | null = null;
@@ -266,7 +292,8 @@ class SoundEngine {
     startTime: number = 0,
     offsetSec: number = 0,
     volumeMultiplier: number = 1.0,
-    loopEndSec?: number
+    loopEndSec?: number,
+    playbackRate: number = 1.0
   ) {
     this.init();
     if (!this.ctx || !this.customAudioBuffer || this.isMuted) return;
@@ -275,6 +302,10 @@ class SoundEngine {
 
     this.customAudioSource = this.ctx.createBufferSource();
     this.customAudioSource.buffer = this.customAudioBuffer;
+
+    // Scale playback speed dynamically to match customized BPM
+    const safeRate = Math.max(0.2, Math.min(3.0, playbackRate || 1.0));
+    this.customAudioSource.playbackRate.setValueAtTime(safeRate, this.ctx.currentTime);
 
     if (loopEndSec && loopEndSec > offsetSec) {
       this.customAudioSource.loop = true;
@@ -288,8 +319,8 @@ class SoundEngine {
     this.customAudioSource.connect(this.customAudioGain);
     this.customAudioGain.connect(this.masterGain!);
 
-    const playAt = startTime || this.ctx.currentTime;
-    const safeOffset = Math.max(0, offsetSec);
+    const playAt = Math.max(startTime, this.ctx.currentTime);
+    const safeOffset = Math.min(Math.max(0, offsetSec), this.customAudioBuffer.duration - 0.05);
     this.customAudioSource.start(playAt, safeOffset);
   }
 
@@ -320,7 +351,7 @@ class SoundEngine {
   private introSource: AudioBufferSourceNode | null = null;
   private currentIntroAudioUrl: string | null = null;
 
-  public async loadIntroMusic(urlOrDataUri: string = '/assets/music/bala_bala_do_intro.mp3'): Promise<boolean> {
+  public async loadIntroMusic(urlOrDataUri: string = '/assets/music/beat.mp3'): Promise<boolean> {
     this.init();
     if (!this.ctx) return false;
     if (this.currentIntroAudioUrl === urlOrDataUri && this.introBuffer) return true;
@@ -697,23 +728,24 @@ class SoundEngine {
         const session = this.activeSession;
         const introBeats = session.introBeats;
 
+        // Dynamic playback speed: match custom BPM relative to native base BPM
+        const baseBpm = session.baseBpm || (session.customAudioUrl?.includes('beat.mp3') ? 182.8 : session.bpm);
+        const rate = (baseBpm && baseBpm > 0) ? (session.bpm / baseBpm) : 1.0;
+
         if (currentBeat < introBeats) {
           // --- INTRO PHASE ---
           if (currentBeat === 0) {
-            if (this.introBuffer) {
-              this.playIntroMusic(scheduledTime);
-            } else if (this.customAudioBuffer) {
+            if (this.customAudioBuffer) {
               this.stopCustomTrack();
-              this.playCustomTrack(scheduledTime, 0);
+              this.playCustomTrack(scheduledTime, 0, 1.0, undefined, rate);
             }
           }
 
-          // If no custom audio is playing, use clean synthesized intro ticks
-          if (!this.introSource && !this.customAudioSource) {
-            this.playStrongIntroBeat(scheduledTime, currentBeat, introBeats, secondsPerBeat);
-          } else {
-            // Subtle click to anchor the tempo
-            this.playScheduledTick(scheduledTime, currentBeat === 0);
+          // In case custom audio buffer finished decoding slightly after beat 0 during intro
+          if (!this.customAudioSource && this.customAudioBuffer) {
+            const introElapsedSec = currentBeat * secondsPerBeat;
+            const audioOffset = introElapsedSec * rate;
+            this.playCustomTrack(scheduledTime, audioOffset, 1.0, undefined, rate);
           }
 
           // Trigger visual callback at exact audio sync time
@@ -726,17 +758,25 @@ class SoundEngine {
           }, delayMs);
 
         } else {
-          // --- GAME PHASE (正式游戏卡点阶段: 伴奏播放 + 强力节拍鼓点!) ---
+          // --- GAME PHASE (伴奏播放 + 卡点触发) ---
           const gameBeatIndex = currentBeat - introBeats;
           
-          // Drop into the game phase: play the music track
+          // Drop into the game phase: play the music track scaled by BPM rate
           if (gameBeatIndex === 0) {
             this.stopIntroMusic();
             if (this.customAudioBuffer) {
-              const offset = Math.max(0, session.audioOffsetSec !== undefined ? session.audioOffsetSec : 4.64);
+              const offset = Math.max(0, session.audioOffsetSec !== undefined ? session.audioOffsetSec : 2.626);
               this.stopCustomTrack();
-              this.playCustomTrack(scheduledTime, offset, 0.45, session.audioLoopEndSec);
+              this.playCustomTrack(scheduledTime, offset, 1.0, session.audioLoopEndSec, rate);
             }
+          } else if (!this.customAudioSource && this.customAudioBuffer) {
+            // In case custom audio buffer finished decoding slightly after game beat 0
+            const offset = Math.max(0, session.audioOffsetSec !== undefined ? session.audioOffsetSec : 2.626);
+            const loopEnd = session.audioLoopEndSec || 5.251;
+            const loopDuration = loopEnd > offset ? (loopEnd - offset) : (8 * (60.0 / 182.8));
+            const gameElapsedSec = (gameBeatIndex * secondsPerBeat) * rate;
+            const currentLoopOffset = offset + (gameElapsedSec % loopDuration);
+            this.playCustomTrack(scheduledTime, currentLoopOffset, 1.0, session.audioLoopEndSec, rate);
           }
 
           if (gameBeatIndex >= session.totalGameBeats) {
@@ -751,14 +791,6 @@ class SoundEngine {
             this.isRunning = false;
             return;
           }
-
-          // Play drum on the beat: ONLY floor tom, no other drums
-          const totalCards = Math.max(1, session.cardsCount);
-          const stepInMeasure = gameBeatIndex % totalCards;
-          const isDownbeat = stepInMeasure === 0;
-
-          // Pure Floor Tom on every beat (accented on downbeat)
-          this.playFloorTom(scheduledTime, isDownbeat);
 
           const delayMs = Math.max(0, (scheduledTime - this.ctx.currentTime) * 1000);
           const cardIdx = gameBeatIndex % Math.max(1, session.cardsCount);
@@ -782,12 +814,8 @@ class SoundEngine {
         }, delayMs);
       }
 
-      // Advance clock: if custom introDurationSec is provided and we are in intro phase, advance by intro beat interval
-      const session = this.activeSession;
-      const stepInterval = (session && session.introDurationSec && currentBeat < session.introBeats)
-        ? (session.introDurationSec / session.introBeats)
-        : secondsPerBeat;
-      this.nextBeatTime += stepInterval;
+      // Advance clock: each beat is secondsPerBeat (60 / currentBpm)
+      this.nextBeatTime += secondsPerBeat;
       this.beatIndex++;
     }
 
@@ -821,12 +849,10 @@ class SoundEngine {
     this.isRunning = true;
     this.beatIndex = 0;
 
-    if (options.customIntroAudioUrl) {
-      this.loadIntroMusic(options.customIntroAudioUrl);
-    }
-    if (options.customAudioUrl) {
-      this.loadCustomAudio(options.customAudioUrl);
-    }
+    const effectiveAudioUrl = (!options.customAudioUrl || options.customAudioUrl.includes('Bala_Bala'))
+      ? '/assets/music/beat.mp3'
+      : options.customAudioUrl;
+    this.loadCustomAudio(effectiveAudioUrl);
 
     this.ensureRhythmGain();
 
@@ -989,7 +1015,7 @@ class SoundEngine {
 
   public previewSoundPack(
     pack: SoundPackType,
-    bpm: number = 120,
+    bpm: number = 160,
     totalBeats: number = 8,
     onBeat?: (beat: number) => void,
     onComplete?: () => void

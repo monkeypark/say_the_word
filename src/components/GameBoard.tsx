@@ -16,9 +16,15 @@ import {
   Shuffle,
   Dices,
   Edit3,
-  Video
+  Video,
+  Lock,
+  Eye,
+  EyeOff,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Challenge, RoundConfig, GameStats, BeatJudgmentType, IntroStyleType, INTRO_STYLES, CardItem } from '../types/game';
+import { VIRAL_CLASSICS_MUSIC } from '../data/defaultChallenges';
 import { soundEngine } from '../services/soundEngine';
 import { MicDetector } from '../services/micDetector';
 
@@ -65,6 +71,7 @@ interface GameBoardProps {
   language: 'zh' | 'en';
   onBackToMenu: () => void;
   onEditChallenge?: (c: Challenge) => void;
+  onCopyChallenge?: (c: Challenge) => void;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -74,6 +81,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   language,
   onBackToMenu,
   onEditChallenge,
+  onCopyChallenge,
 }) => {
   const [currentRoundIdx, setCurrentRoundIdx] = useState(0);
   const [gameState, setGameState] = useState<'idle' | 'intro' | 'countdown' | 'playing' | 'allClear'>('idle');
@@ -104,11 +112,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [micVolume, setMicVolume] = useState(0);
   const [voiceSpokeRecent, setVoiceSpokeRecent] = useState(false);
 
+  // For all custom challenges, strictly match the Viral Classics music (intro + beat + loop)
+  const isCustomOrUsesBeat = challenge.isCustom || !challenge.customAudioUrl || challenge.customAudioUrl.includes('beat.mp3');
+  const effectiveAudioUrl: string = (isCustomOrUsesBeat || !challenge.customAudioUrl) ? VIRAL_CLASSICS_MUSIC.customAudioUrl : challenge.customAudioUrl;
+  const effectiveAudioOffsetSec = isCustomOrUsesBeat ? VIRAL_CLASSICS_MUSIC.audioOffsetSec : (challenge.audioOffsetSec ?? 2.626);
+  const effectiveIntroDurationSec = isCustomOrUsesBeat ? VIRAL_CLASSICS_MUSIC.introDurationSec : (challenge.introDurationSec ?? 2.626);
+  const effectiveAudioLoopEndSec = isCustomOrUsesBeat ? VIRAL_CLASSICS_MUSIC.audioLoopEndSec : (challenge.audioLoopEndSec ?? 5.251);
+  const effectiveBaseBpm = isCustomOrUsesBeat ? VIRAL_CLASSICS_MUSIC.baseBpm : (challenge.baseBpm || 182.8);
+  const effectiveSoundPack = isCustomOrUsesBeat ? VIRAL_CLASSICS_MUSIC.soundPack : challenge.soundPack;
+
   // Intro setting state (Defaults to 8-beat intro for 'bala bala bala bala 1 2 3 go' chant)
   const [introStyle, setIntroStyle] = useState<IntroStyleType>(challenge.introStyle || 'quick_8');
   const [introStep, setIntroStep] = useState(0);
   const [introTotalBeats, setIntroTotalBeats] = useState(challenge.introStyle === 'quick_4' ? 4 : 8);
-  const [audioOffsetSec, setAudioOffsetSec] = useState<number>(challenge.audioOffsetSec !== undefined ? challenge.audioOffsetSec : 4.02);
+  const [audioOffsetSec, setAudioOffsetSec] = useState<number>(effectiveAudioOffsetSec);
 
   // Audio preview on waiting screen
   const [isAuditioningBeat, setIsAuditioningBeat] = useState(false);
@@ -129,6 +146,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     return ensure8Cards(pool, shuffleCards);
   });
   const displayedCardsRef = useRef<CardItem[]>(displayedCards);
+
+  // Hidden cards toggle on preview panel (default false: cards are hidden before every round)
+  const [showPreviewCards, setShowPreviewCards] = useState<boolean>(false);
 
   useEffect(() => {
     displayedCardsRef.current = displayedCards;
@@ -167,13 +187,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   // Sync current round, soundpack, and user-uploaded custom audio / pre-music
   useEffect(() => {
-    soundEngine.setSoundPack(challenge.soundPack);
-    if (challenge.customAudioUrl) {
-      soundEngine.loadCustomAudio(challenge.customAudioUrl);
-    }
-    if (challenge.customIntroAudioUrl) {
-      soundEngine.loadIntroMusic(challenge.customIntroAudioUrl);
-    }
+    setAudioOffsetSec(effectiveAudioOffsetSec);
+    soundEngine.loadCustomAudio(effectiveAudioUrl);
     
     return () => {
       clearAllTimers();
@@ -182,7 +197,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       soundEngine.stopCustomTrack();
       soundEngine.stopIntroMusic();
     };
-  }, [challenge]);
+  }, [challenge.id, effectiveAudioUrl, effectiveAudioOffsetSec]);
 
   // Setup Microphone Detector
   useEffect(() => {
@@ -333,6 +348,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     } else {
       setIsPreLoop(false);
       isPreLoopRef.current = false;
+      // 到你时（挑战阶段）：卡片全开显示
+      setMaxRevealedIdx(displayedCardsRef.current.length);
     }
 
     const currentCards = displayedCardsRef.current;
@@ -358,7 +375,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       ? (language === 'zh' ? '示范即将开始...' : 'GET READY (LISTEN)') 
       : (language === 'zh' ? '准备！轮到你了' : 'GET READY (YOUR TURN)');
 
-
     // Launch unified session: Intro counts down with clean ticks,
     // and accompaniment drops in on downbeat 0 seamlessly!
     soundEngine.startRoundSession({
@@ -366,12 +382,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       introBeats,
       cardsCount: currentCards.length,
       totalGameBeats: totalBeats,
-      soundPack: challenge.soundPack,
-      customAudioUrl: challenge.customAudioUrl,
+      soundPack: effectiveSoundPack,
+      customAudioUrl: effectiveAudioUrl,
       customIntroAudioUrl: challenge.customIntroAudioUrl,
       audioOffsetSec: audioOffsetSec,
-      introDurationSec: challenge.introDurationSec,
-      audioLoopEndSec: challenge.audioLoopEndSec,
+      introDurationSec: effectiveIntroDurationSec,
+      audioLoopEndSec: effectiveAudioLoopEndSec,
+      baseBpm: effectiveBaseBpm,
       onIntroBeat: (currentBeat, totalBeatsCount) => {
         setGameState('intro');
         setIntroStep(currentBeat - 1);
@@ -441,12 +458,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const startGame = async () => {
     soundEngine.init();
-    if (challenge.customAudioUrl) {
-      soundEngine.loadCustomAudio(challenge.customAudioUrl);
-    }
-    if (challenge.customIntroAudioUrl) {
-      soundEngine.loadIntroMusic(challenge.customIntroAudioUrl);
-    }
+    await soundEngine.loadCustomAudio(effectiveAudioUrl);
     startCountdownAndPlay(0, 'demo');
   };
 
@@ -459,18 +471,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       setIsAuditioningBeat(false);
     } else {
       setIsAuditioningBeat(true);
-      if (challenge.customAudioUrl) {
-        await soundEngine.loadCustomAudio(challenge.customAudioUrl);
-        soundEngine.playCustomTrack(0, challenge.audioOffsetSec || 0);
-      } else {
-        soundEngine.previewSoundPack(
-          challenge.soundPack,
-          currentRound.bpm,
-          16,
-          undefined,
-          () => setIsAuditioningBeat(false)
-        );
-      }
+      await soundEngine.loadCustomAudio(effectiveAudioUrl);
+      const rate = (currentRound.bpm || 160) / effectiveBaseBpm;
+      soundEngine.playCustomTrack(0, audioOffsetSec, 1.0, effectiveAudioLoopEndSec, rate);
     }
   };
 
@@ -539,7 +542,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="relative w-full max-w-5xl mx-auto flex flex-col p-2.5 sm:p-4 select-none overflow-x-hidden space-y-3">
       {/* Top Rhythm HUD */}
-      <div className="w-full flex items-center justify-between gap-2 sm:gap-4 bg-[#0f1422] border border-slate-800/80 rounded-xl sm:rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 shadow-md min-w-0">
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-4 bg-white dark:bg-[#0f1422] border border-slate-200 dark:border-slate-800/80 rounded-xl sm:rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 shadow-sm dark:shadow-md min-w-0 transition-colors">
         {/* Left: Back & Track Info */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
@@ -549,22 +552,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               soundEngine.stopPreview();
               onBackToMenu();
             }}
-            className="shrink-0 flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 border border-slate-800 transition-colors"
+            className="shrink-0 flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 transition-colors"
           >
             <span>{language === 'zh' ? '← 返回' : '← Back'}</span>
           </button>
 
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
-              <h2 className="text-xs sm:text-base font-bold text-white tracking-tight truncate min-w-0 max-w-[100px] xs:max-w-[140px] sm:max-w-xs">
+              <h2 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate min-w-0 max-w-[100px] xs:max-w-[140px] sm:max-w-xs">
                 {challenge.title}
               </h2>
-              <span className="shrink-0 text-[10px] sm:text-[11px] font-semibold px-1.5 py-0.2 rounded-md bg-pink-500/10 text-pink-400 border border-pink-500/20 whitespace-nowrap">
+              <span className="shrink-0 text-[10px] sm:text-[11px] font-semibold px-1.5 py-0.2 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20 whitespace-nowrap">
                 {language === 'zh' ? `第 ${safeRoundIdx + 1} 关` : `Level ${safeRoundIdx + 1}`} · {currentRound.bpm} BPM
               </span>
             </div>
             {shuffleCards && (
-              <span className="hidden sm:inline text-[11px] text-slate-400">
+              <span className="hidden sm:inline text-[11px] text-slate-600 dark:text-slate-500 dark:text-slate-400">
                 {language === 'zh' ? '每个关卡已开启随机打乱' : 'Shuffle enabled (per level)'}
               </span>
             )}
@@ -572,8 +575,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         </div>
 
         {/* Center: Beat Step Dots (Adaptive to 8-beat intro and card beats) */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 shrink-0">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shrink-0">
+          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider">
             {gameState === 'intro' ? 'INTRO' : 'BEAT'}
           </span>
           <div className="flex items-center gap-1.5">
@@ -589,7 +592,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                           ? 'bg-amber-400 scale-125 shadow-sm shadow-amber-500'
                           : isPassed
                           ? 'bg-amber-500/40'
-                          : 'bg-slate-800'
+                          : 'bg-slate-300 dark:bg-slate-800'
                       }`}
                     />
                   );
@@ -602,7 +605,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       className={`w-2.5 h-2.5 rounded-full transition-all duration-75 ${
                         isCurrentStep
                           ? 'bg-pink-400 scale-125 shadow-sm shadow-pink-500'
-                          : 'bg-slate-800'
+                          : 'bg-slate-300 dark:bg-slate-800'
                       }`}
                     />
                   );
@@ -613,19 +616,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* Right: Score & Combo */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <div className="text-right">
-            <span className="text-[9px] sm:text-[10px] uppercase font-semibold text-slate-500 block leading-tight">
+            <span className="text-[9px] sm:text-[10px] uppercase font-semibold text-slate-600 dark:text-slate-500 block leading-tight">
               {language === 'zh' ? '得分' : 'SCORE'}
             </span>
-            <span className="text-base sm:text-xl font-black text-white font-mono-numeric">
+            <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white font-mono-numeric">
               {stats.score.toLocaleString()}
             </span>
           </div>
 
-          <div className="text-right border-l border-slate-800 pl-2 sm:pl-3">
-            <span className="text-[9px] sm:text-[10px] uppercase font-semibold text-slate-500 block leading-tight">
+          <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-2 sm:pl-3">
+            <span className="text-[9px] sm:text-[10px] uppercase font-semibold text-slate-600 dark:text-slate-500 block leading-tight">
               {language === 'zh' ? '连击' : 'COMBO'}
             </span>
-            <span className="text-base sm:text-xl font-black text-pink-400 font-mono-numeric">
+            <span className="text-base sm:text-xl font-black text-pink-500 font-mono-numeric">
               {stats.combo}x
             </span>
           </div>
@@ -643,9 +646,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <span
               className={`text-xl sm:text-2xl font-black tracking-wider uppercase px-4 py-1 rounded-xl shadow-lg ${
                 lastJudgment.type === 'PERFECT'
-                  ? 'bg-amber-400/20 text-amber-300 border border-amber-400/60'
+                  ? 'bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/60'
                   : lastJudgment.type === 'GREAT'
-                  ? 'bg-cyan-400/20 text-cyan-300 border border-cyan-400/60'
+                  ? 'bg-cyan-400/20 text-cyan-700 dark:text-cyan-300 border border-cyan-400/60'
                   : 'bg-rose-500/20 text-rose-300 border border-rose-500/60'
               }`}
             >
@@ -688,24 +691,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           <div className={`grid gap-3 sm:gap-4 w-full mx-auto ${getGridColsClass(displayedCards.length)} items-stretch`}>
           {displayedCards.map((card, idx) => {
             const isActive = activeCardIndex === idx;
-            const isRevealed = gameState === 'allClear' || gameState === 'intro' || idx <= maxRevealedIdx;
+            // 到你时（!isPreLoop）卡片全开；示范阶段（isPreLoop）跟随节拍翻开；通关全开
+            const isRevealed = gameState === 'allClear' || !isPreLoop || (gameState === 'playing' && idx <= maxRevealedIdx);
             const mode = card.cardMode || (card.textOnly ? 'text' : 'image');
 
             if (!isRevealed) {
               return (
                 <div
-                  key={`unrevealed-space-${idx}`}
-                  className="relative flex flex-col justify-between rounded-2xl p-3 sm:p-4 opacity-0 pointer-events-none select-none invisible h-52 sm:h-64"
-                  aria-hidden="true"
+                  key={`mystery-card-${idx}`}
+                  className="relative flex flex-col justify-between rounded-2xl p-3 sm:p-4 h-52 sm:h-64 bg-slate-100 dark:bg-[#0a0e1a]/95 border-2 border-slate-200 dark:border-slate-800/80 shadow-inner select-none transition-all duration-150"
                 >
+                  {/* Card Number Badge */}
                   <div className="flex items-center justify-between h-7">
-                    <span className="w-6 h-6 rounded-lg">{idx + 1}</span>
+                    <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
+                      {idx + 1}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-slate-600 dark:text-slate-400 dark:text-slate-500" />
+                      {language === 'zh' ? '隐藏' : 'LOCKED'}
+                    </span>
                   </div>
+
+                  {/* Mystery Center */}
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="text-2xl sm:text-4xl md:text-5xl font-black">
-                      {card.word || 'Space'}
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 flex items-center justify-center text-3xl sm:text-4xl text-slate-600 dark:text-slate-400 dark:text-slate-500 font-black shadow-inner">
+                      <span className="animate-pulse text-pink-500 dark:text-pink-400/80">?</span>
                     </div>
+                    <span className="text-[11px] text-slate-600 dark:text-slate-400 dark:text-slate-500 font-semibold mt-3 tracking-widest uppercase">
+                      {language === 'zh' ? '示范中翻牌' : 'ON BEAT'}
+                    </span>
                   </div>
+
+                  {/* Footer spacer */}
+                  <div className="h-4" />
                 </div>
               );
             }
@@ -716,17 +734,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 onClick={() => gameState === 'playing' && handleHitAttempt('tap')}
                 className={`relative flex flex-col justify-between rounded-2xl p-3 sm:p-4 h-52 sm:h-64 cursor-pointer select-none overflow-hidden transition-[border-color,background-color,box-shadow,transform,opacity] duration-100 ${
                   isActive
-                    ? 'bg-[#181f33] border-2 border-pink-400 shadow-xl shadow-pink-500/30 scale-[1.02] z-10 opacity-100'
+                    ? 'bg-pink-50/60 dark:bg-[#181f33] border-2 border-pink-500 shadow-xl shadow-pink-500/20 dark:shadow-pink-500/30 scale-[1.02] z-10 opacity-100'
                     : gameState === 'intro'
-                    ? 'bg-[#0b0f19] border-2 border-slate-800/80 opacity-75'
-                    : 'bg-[#0f1422] border-2 border-slate-800 hover:border-slate-700 opacity-100'
+                    ? 'bg-white dark:bg-[#0f1422] border-2 border-pink-500/30 opacity-90 shadow-sm'
+                    : 'bg-white dark:bg-[#0f1422] border-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-100 shadow-sm'
                 }`}
               >
                 {/* Header bar with fixed height (prevents active badge from stretching card) */}
                 <div className="flex items-center justify-between h-7">
                   <span
                     className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-colors ${
-                      isActive ? 'bg-pink-500 text-white' : 'bg-slate-800/80 text-slate-400'
+                      isActive ? 'bg-pink-500 text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {idx + 1}
@@ -736,7 +754,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   <div className="flex items-center gap-1.5 min-h-[22px]">
                     {isActive && (
                       <span className={`text-[10px] sm:text-[11px] font-black uppercase px-2 py-0.5 rounded-md ${
-                        isPreLoop ? 'bg-indigo-500/40 text-indigo-100' : 'bg-pink-500/40 text-pink-100 animate-pulse'
+                        isPreLoop ? 'bg-indigo-500/20 dark:bg-indigo-500/40 text-indigo-700 dark:text-indigo-100' : 'bg-pink-500/20 dark:bg-pink-500/40 text-pink-700 dark:text-pink-100 animate-pulse'
                       }`}>
                         {isPreLoop 
                           ? (language === 'zh' ? '准备' : 'READY') 
@@ -754,12 +772,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         card.word.length > 5
                           ? 'text-xl sm:text-2xl md:text-3xl'
                           : 'text-2xl sm:text-4xl md:text-5xl'
-                      } ${isActive ? 'text-white' : 'text-slate-100'}`}
+                      } ${isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}
                     >
                       {card.word}
                     </div>
                     {card.subtext ? (
-                      <div className="text-xs text-slate-400 font-medium mt-2 max-w-[90%] truncate">
+                      <div className="text-xs text-slate-600 dark:text-slate-500 dark:text-slate-400 font-medium mt-2 max-w-[90%] truncate">
                         {card.subtext}
                       </div>
                     ) : (
@@ -789,12 +807,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     <div className="w-full text-center mt-2">
                       <div
                         className={`text-lg sm:text-xl font-bold tracking-tight truncate transition-colors ${
-                          isActive ? 'text-white' : 'text-slate-200'
+                          isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-200'
                         }`}
                       >
                         {card.word}
                       </div>
-                      <div className="text-xs text-slate-400 font-medium mt-0.5 truncate h-4">
+                      <div className="text-xs text-slate-600 dark:text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate h-4">
                         {mode === 'mixed' && card.subtext ? card.subtext : ''}
                       </div>
                     </div>
@@ -808,31 +826,56 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
         {/* CLEAN PRE-GAME SETUP PANEL (When idle) */}
         {gameState === 'idle' && (
-          <div className="max-w-2xl w-full mx-auto p-3 sm:p-4 rounded-2xl bg-[#0f1422] border border-slate-800 space-y-3 shadow-lg">
-            {/* Preview Cards Strip */}
-            <div className="space-y-2 pb-3 border-b border-slate-800/80">
+          <div className="max-w-2xl w-full mx-auto p-3 sm:p-4 rounded-2xl bg-white dark:bg-[#0f1422] border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm dark:shadow-lg transition-colors">
+            {/* Preview Cards Strip (Hidden by default before game starts) */}
+            <div className="space-y-2 pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  {language === 'zh' ? `本关预览卡片 (${displayedCards.length}张)` : `Level Preview Cards (${displayedCards.length})`}
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-pink-500" />
+                  {language === 'zh' ? `本关卡片 (${displayedCards.length}张 · 默认隐藏)` : `Level Cards (${displayedCards.length} · Hidden)`}
                 </span>
-                <span className="text-[11px] font-mono text-pink-400">
-                  {language === 'zh' ? `BPM: ${currentRound.bpm}` : `BPM: ${currentRound.bpm}`}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPreviewCards(prev => !prev)}
+                    className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:text-pink-500 transition-colors px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                  >
+                    {showPreviewCards ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    <span>{showPreviewCards ? (language === 'zh' ? '隐藏卡片' : 'Hide Cards') : (language === 'zh' ? '偷看卡片' : 'Peek Cards')}</span>
+                  </button>
+                  <span className="text-[11px] font-mono text-pink-500 font-bold">
+                    BPM: {currentRound.bpm}
+                  </span>
+                </div>
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
                 {displayedCards.map((card, idx) => (
                   <div
                     key={`preview-card-${card.id || idx}-${idx}`}
-                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center shadow-sm"
+                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center shadow-sm min-h-[72px]"
                   >
-                    <span className="text-xl mb-1">{card.emoji || '✨'}</span>
-                    <span className="text-xs font-bold text-white truncate w-full">
-                      {card.word}
-                    </span>
-                    {card.subtext && (
-                      <span className="text-[10px] text-slate-400 truncate w-full">
-                        {card.subtext}
-                      </span>
+                    {showPreviewCards ? (
+                      <>
+                        <span className="text-xl mb-1">{card.emoji || '✨'}</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white truncate w-full">
+                          {card.word}
+                        </span>
+                        {card.subtext && (
+                          <span className="text-[10px] text-slate-600 dark:text-slate-500 dark:text-slate-400 truncate w-full">
+                            {card.subtext}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-lg mb-1 text-slate-600 dark:text-slate-400 dark:text-slate-600">❓</span>
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500 truncate w-full">
+                          ???
+                        </span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 dark:text-slate-600 truncate w-full font-mono">
+                          #{idx + 1}
+                        </span>
+                      </>
                     )}
                   </div>
                 ))}
@@ -840,36 +883,36 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
 
             {/* Card Order Shuffle Mode Controls */}
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2 flex-wrap">
-                <Clock className="w-4 h-4 text-pink-400" />
-                <span className="text-xs sm:text-sm font-bold text-slate-200">
+                <Clock className="w-4 h-4 text-pink-500" />
+                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                   {language === 'zh' 
                     ? `前奏: ${(INTRO_STYLES.find(s => s.id === introStyle)?.beats || 8)} 拍` 
                     : `Intro: ${(INTRO_STYLES.find(s => s.id === introStyle)?.beats || 8)} Beats`}
                 </span>
                 {challenge.customAudioUrl && (
-                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-0.5 text-[11px]">
-                    <span className="text-slate-400">{language === 'zh' ? '卡点偏移:' : 'Offset:'}</span>
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-0.5 text-[11px]">
+                    <span className="text-slate-600 dark:text-slate-400">{language === 'zh' ? '卡点偏移:' : 'Offset:'}</span>
                     <button
                       type="button"
                       onClick={() => setAudioOffsetSec(prev => Math.max(0, Math.round((prev - 0.05) * 100) / 100))}
-                      className="px-1 text-slate-400 hover:text-white font-bold"
+                      className="px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold"
                     >
                       -
                     </button>
-                    <span className="font-mono text-pink-300">{audioOffsetSec.toFixed(2)}s</span>
+                    <span className="font-mono text-pink-500 font-bold">{audioOffsetSec.toFixed(2)}s</span>
                     <button
                       type="button"
                       onClick={() => setAudioOffsetSec(prev => Math.round((prev + 0.05) * 100) / 100)}
-                      className="px-1 text-slate-400 hover:text-white font-bold"
+                      className="px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold"
                     >
                       +
                     </button>
                   </div>
                 )}
                 {challenge.audioFileName && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-pink-500/15 border border-pink-500/30 text-pink-300 font-medium truncate max-w-[130px]">
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-pink-500/10 border border-pink-500/20 text-pink-600 dark:text-pink-300 font-medium truncate max-w-[130px]">
                     🎵 {challenge.audioFileName}
                   </span>
                 )}
@@ -879,20 +922,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <button
                 type="button"
                 onClick={handleToggleAudition}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs ${
                   isAuditioningBeat
-                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                    : 'bg-slate-800/80 hover:bg-slate-800 text-pink-400 border border-slate-700/80'
+                    ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/40'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-pink-400 dark:border-slate-700/80'
                 }`}
               >
                 {isAuditioningBeat ? (
                   <>
-                    <Square className="w-3.5 h-3.5 fill-current text-rose-400" />
+                    <Square className="w-3.5 h-3.5 fill-current text-rose-600 dark:text-rose-400" />
                     <span>{language === 'zh' ? '停止试听' : 'Stop Preview'}</span>
                   </>
                 ) : (
                   <>
-                    <Volume2 className="w-3.5 h-3.5 text-pink-400" />
+                    <Volume2 className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
                     <span>{language === 'zh' ? '试听伴奏' : 'Preview Beat'}</span>
                   </>
                 )}
@@ -902,8 +945,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {/* Card Order Shuffle Mode Controls */}
             <div className="pt-1 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Shuffle className="w-4 h-4 text-purple-400" />
-                <span className="text-xs sm:text-sm font-bold text-slate-200">
+                <Shuffle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                   {language === 'zh' ? '卡片顺序' : 'Card Order'}
                 </span>
               </div>
@@ -919,10 +962,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     setDisplayedCards(res);
                     displayedCardsRef.current = res;
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs ${
                     shuffleCards
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                      : 'bg-slate-800 text-slate-400 border border-slate-700/80'
+                      ? 'bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/40'
+                      : 'bg-slate-100 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700/80'
                   }`}
                 >
                   <Shuffle className="w-3.5 h-3.5" />
@@ -943,9 +986,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       displayedCardsRef.current = res;
                     }}
                     title={language === 'zh' ? '重新打乱' : 'Reshuffle'}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700 text-xs font-bold transition-colors shadow-2xs"
                   >
-                    <Dices className="w-3.5 h-3.5" />
+                    <Dices className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                     <span>{language === 'zh' ? '洗牌' : 'Reshuffle'}</span>
                   </button>
                 )}
@@ -954,6 +997,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
             {/* Action Buttons inside panel */}
             <div className="pt-2 flex items-center gap-2">
+              {onCopyChallenge && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAllTimers();
+                    soundEngine.stopRhythm();
+                    soundEngine.stopPreview();
+                    onCopyChallenge(challenge);
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-bold text-xs sm:text-sm transition-all shrink-0 shadow-2xs"
+                  title={language === 'zh' ? '复制并修改此挑战' : 'Copy and edit track'}
+                >
+                  <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <span>{language === 'zh' ? '复制' : 'Copy'}</span>
+                </button>
+              )}
               {onEditChallenge && (
                 <button
                   type="button"
@@ -963,15 +1022,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     soundEngine.stopPreview();
                     onEditChallenge(challenge);
                   }}
-                  className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-white border border-purple-500/40 font-bold text-xs sm:text-sm transition-all shrink-0"
+                  className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 dark:bg-purple-600/20 dark:hover:bg-purple-600/30 dark:text-purple-300 dark:border-purple-500/40 font-bold text-xs sm:text-sm transition-all shrink-0 shadow-2xs"
                 >
-                  <Edit3 className="w-4 h-4 text-purple-400" />
+                  <Edit3 className="w-4 h-4 text-indigo-600 dark:text-purple-400" />
                   <span>{language === 'zh' ? '修改挑战' : 'Edit Track'}</span>
                 </button>
               )}
               <button
                 onClick={startGame}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-black text-sm sm:text-base shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-black text-sm sm:text-base shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
                 <Play className="w-4 h-4 fill-current" />
                 <span>{language === 'zh' ? '开始挑战 (按空格键)' : 'START CHALLENGE'}</span>
@@ -982,7 +1041,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
         {/* In-Game Interactive Prompt */}
         {gameState === 'playing' && (
-          <div className="mt-4 text-center text-xs text-slate-400">
+          <div className="mt-4 text-center text-xs text-slate-600 dark:text-slate-400 font-semibold">
             <span>
               {language === 'zh'
                 ? '卡准鼓点报出高亮词汇 (敲击空格键 / 触屏 / 开麦皆可判定)'
@@ -994,15 +1053,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
       {/* Mic Volume Level Bar */}
       {isMicActive && (
-        <div className="max-w-xs mx-auto w-full mb-3 flex items-center gap-2.5 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-1.5">
-          <Mic className={`w-3.5 h-3.5 ${voiceSpokeRecent ? 'text-emerald-400' : 'text-slate-500'}`} />
-          <div className="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+        <div className="max-w-xs mx-auto w-full mb-3 flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-1.5">
+          <Mic className={`w-3.5 h-3.5 ${voiceSpokeRecent ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-500'}`} />
+          <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
             <div
               className="h-full bg-emerald-400 transition-all duration-75"
               style={{ width: `${Math.min(100, micVolume * 100)}%` }}
             />
           </div>
-          <span className="text-[10px] font-mono text-slate-400">
+          <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400">
             {voiceSpokeRecent ? (language === 'zh' ? '发声' : 'Voice') : (language === 'zh' ? '音量' : 'Level')}
           </span>
         </div>
@@ -1017,7 +1076,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             soundEngine.stopPreview();
             onBackToMenu();
           }}
-          className="text-xs text-slate-400 hover:text-white transition-colors"
+          className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           {language === 'zh' ? '← 返回挑战库' : '← Challenges'}
         </button>
@@ -1026,7 +1085,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           {(gameState === 'playing' || gameState === 'intro') && (
             <button
               onClick={restartGame}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 text-xs font-semibold transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{language === 'zh' ? '重新开始本关' : 'Restart Level'}</span>
@@ -1034,9 +1093,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
           <span>{language === 'zh' ? '准确率:' : 'Accuracy:'}</span>
-          <span className="font-mono-numeric font-bold text-white">
+          <span className="font-mono-numeric font-bold text-slate-900 dark:text-white">
             {accuracy}%
           </span>
         </div>
@@ -1045,15 +1104,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {/* ALL CLEAR VICTORY MODAL */}
       {gameState === 'allClear' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="max-w-md w-full bg-slate-950 border-2 border-amber-400/60 rounded-3xl p-6 sm:p-8 text-center shadow-2xl shadow-amber-500/20">
+          <div className="max-w-md w-full bg-white dark:bg-slate-950 border-2 border-amber-400/60 rounded-3xl p-6 sm:p-8 text-center shadow-2xl shadow-amber-500/20">
             <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600 flex items-center justify-center text-4xl shadow-xl shadow-amber-500/30 mb-4 animate-bounce">
               🏆
             </div>
 
-            <h3 className="text-3xl font-black text-white tracking-tight mb-1">
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
               {language === 'zh' ? `恭喜全部 ${totalRounds} 关通关!` : 'ALL LEVELS CLEARED!'}
             </h3>
-            <p className="text-sm text-amber-400 font-semibold mb-6">
+            <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold mb-6">
               {language === 'zh' ? '你的嘴速与节奏感已达封神水准！' : 'Godlike Rhythm Master on TikTok!'}
             </p>
 
@@ -1075,7 +1134,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   soundEngine.stopPreview();
                   onBackToMenu();
                 }}
-                className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-sm border border-slate-800 transition-colors"
+                className="w-full py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm border border-slate-300 dark:border-slate-800 transition-colors"
               >
                 {language === 'zh' ? '选择其他挑战' : 'Choose Another Challenge'}
               </button>

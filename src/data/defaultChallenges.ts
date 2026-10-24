@@ -1,18 +1,23 @@
 import { Challenge } from '../types/game';
 
+export const VIRAL_CLASSICS_MUSIC = {
+  customAudioUrl: '/assets/music/beat.mp3',
+  audioFileName: 'beat.mp3',
+  audioOffsetSec: 2.626,
+  introDurationSec: 2.626,
+  audioLoopEndSec: 5.251,
+  baseBpm: 182.8,
+  soundPack: 'drill' as const,
+  introStyle: 'quick_8' as const,
+};
+
 export const DEFAULT_CHALLENGES: Challenge[] = [
   {
     id: 'bala-bala-challenge',
     title: '🔥 巴拉巴拉魔性洗脑 (Bala Bala Beat)',
-    description: '使用 AI 生成专属节拍！超带感 131 BPM 魔性节奏，跟上节奏大声喊出关键词！',
+    description: '使用 AI 生成专属节拍！超带感 160 BPM 口哨洗脑节奏，口哨声精准卡点！',
     category: 'Viral Classics',
-    soundPack: 'drill',
-    customAudioUrl: '/assets/music/Bala_Bala_1.mp3',
-    audioFileName: 'Bala_Bala_1.mp3',
-    audioOffsetSec: 7.882,
-    introDurationSec: 7.882,
-    audioLoopEndSec: 11.543,
-    introStyle: 'quick_8',
+    ...VIRAL_CLASSICS_MUSIC,
     shuffleCards: true,
     cardPool: [
       { id: 'b1', word: '巴拉', subtext: 'Bala ⚡', emoji: '⚡', color: '#ec4899' },
@@ -33,8 +38,8 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
     rounds: [
       {
         roundNumber: 1,
-        name: 'Round 1: 节拍试炼 (131 BPM)',
-        bpm: 131.1,
+        name: 'Round 1: 节拍试炼 (160 BPM)',
+        bpm: 160,
         loopCount: 2,
         cardCount: 8,
         cards: [
@@ -50,8 +55,8 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
       },
       {
         roundNumber: 2,
-        name: 'Round 2: 全速拉满 (131 BPM)',
-        bpm: 131.1,
+        name: 'Round 2: 全速拉满 (160 BPM)',
+        bpm: 160,
         loopCount: 2,
         cardCount: 8,
         cards: [

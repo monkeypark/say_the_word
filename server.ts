@@ -16,7 +16,7 @@ app.use(express.json({ limit: '10mb' }));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', name: 'Say The Word On Beat' });
+  res.json({ status: 'ok', name: 'Speak on the Beat' });
 });
 
 // AI Generate Custom Challenge endpoint
@@ -29,7 +29,7 @@ app.post('/api/generate-challenge', async (req, res) => {
       });
     }
 
-    const { prompt, language = 'zh-CN', roundsCount = 4, startBpm = 110, cardsPerRound = 4, textOnly = false } = req.body;
+    const { prompt, language = 'zh-CN', roundsCount = 4, startBpm = 160, cardsPerRound = 4, textOnly = false } = req.body;
 
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'Prompt is required' });
@@ -37,7 +37,7 @@ app.post('/api/generate-challenge', async (req, res) => {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    const systemPrompt = `You are a rhythm game designer for the viral party game "Say The Word On Beat".
+    const systemPrompt = `You are a rhythm game designer for the viral party game "Speak on the Beat".
 Create a fun, rhythmic, catchy challenge with ${roundsCount} rounds based on the topic: "${prompt}".
 Target language: ${language === 'zh-CN' ? 'Chinese (Simplified)' : 'English'}.
 Rules:
@@ -86,7 +86,22 @@ JSON schema:
 
     const text = response.text || '{}';
     const parsed = JSON.parse(text);
-    return res.json({ success: true, challenge: parsed });
+
+    // Set the viral Bala Bala Beat music profile as default
+    const challenge = {
+      ...parsed,
+      isCustom: true,
+      soundPack: 'drill',
+      customAudioUrl: '/assets/music/beat.mp3',
+      audioFileName: 'beat.mp3',
+      audioOffsetSec: 2.626,
+      introDurationSec: 2.626,
+      audioLoopEndSec: 5.251,
+      baseBpm: 182.8,
+      introStyle: 'quick_8',
+    };
+
+    return res.json({ success: true, challenge });
   } catch (err: any) {
     console.error('Error generating challenge:', err);
     return res.status(500).json({
