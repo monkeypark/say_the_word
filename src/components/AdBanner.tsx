@@ -34,25 +34,26 @@ export const AdBanner: React.FC<AdBannerProps> = ({ language = 'zh' }) => {
   if (!BANNER_AD_CONFIG.enabled) return null;
 
   return (
-    <div className="w-full py-1 px-3 bg-slate-50 dark:bg-[#0a0d16] border-t border-slate-200/80 dark:border-slate-800/80 transition-colors">
-      <div className="max-w-4xl mx-auto flex flex-col items-center">
-        {/* Subtle, slim Ad Header */}
-        <div className="w-full flex items-center justify-between text-[9px] uppercase font-semibold text-slate-400 dark:text-slate-500 mb-0.5 px-1 tracking-wider">
-          <span>{language === 'zh' ? '广告' : 'ADVERTISEMENT'}</span>
-          <span>Google AdSense</span>
-        </div>
+    <div className="w-full py-0.5 px-2 bg-slate-50 dark:bg-[#0a0d16] border-t border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 h-[28px] sm:h-[32px] overflow-hidden">
+        {/* Subtle inline ad label badge */}
+        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 rounded px-1 shrink-0 select-none">
+          {language === 'zh' ? '广告' : 'AD'}
+        </span>
 
-        {/* Ultra-slim Ad Container (50px standard mobile/desktop banner height) */}
-        <div className="w-full min-h-[50px] max-h-[60px] flex items-center justify-center overflow-hidden">
-          {/* speak on the beat banner */}
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block', width: '100%', height: '50px', minHeight: '50px', maxHeight: '60px' }}
-            data-ad-client={BANNER_AD_CONFIG.publisherId}
-            data-ad-slot={BANNER_AD_CONFIG.slotId}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
+        {/* Ultra-compact, half-height container */}
+        <div className="flex-1 h-[28px] sm:h-[32px] flex items-center justify-center overflow-hidden">
+          <div className="w-full flex items-center justify-center origin-center transform scale-[0.55] sm:scale-[0.6]">
+            {/* speak on the beat banner */}
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block', width: '100%', minWidth: '300px', height: '50px' }}
+              data-ad-client={BANNER_AD_CONFIG.publisherId}
+              data-ad-slot={BANNER_AD_CONFIG.slotId}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            />
+          </div>
         </div>
       </div>
     </div>
