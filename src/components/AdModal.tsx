@@ -123,8 +123,8 @@ export const AdModal: React.FC<AdModalProps> = ({
             />
           </div>
 
-          {/* Test Mode / Fallback Card when AdSense unit is pending or testMode is active */}
-          {(AD_CONFIG.testMode || !adLoaded) && (
+          {/* Test Mode / Fallback Card when testMode is active */}
+          {AD_CONFIG.testMode && (
             <div className="absolute inset-0 bg-slate-50/95 dark:bg-slate-900/95 flex flex-col items-center justify-center p-5 text-center pointer-events-none">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-3">
                 <ShieldCheck className="w-7 h-7" />

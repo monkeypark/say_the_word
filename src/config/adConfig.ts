@@ -21,18 +21,18 @@ export interface AdConfiguration {
 
 export const AD_CONFIG: AdConfiguration = {
   enabled: true,
-  // Google AdSense Publisher ID (Replace with your ca-pub-XXXXXXXXXXXXXXXX)
-  publisherId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_PUB_ID) || 'ca-pub-3940256099942544',
+  // Google AdSense Publisher ID
+  publisherId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_PUB_ID) || 'ca-pub-3612854431763761',
   // Interstitial Ad Unit Slot ID (for every 4 games modal)
-  slotId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_SLOT_ID) || '1234567890',
-  // Bottom Banner Slot ID (for sticky or bottom display ad)
-  bannerSlotId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_BANNER_SLOT_ID) || '9876543210',
+  slotId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_SLOT_ID) || '9775053206',
+  // Bottom Banner Slot ID (Speak on the beat banner)
+  bannerSlotId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_BANNER_SLOT_ID) || '9775053206',
   // Enable bottom banner ad
   bannerEnabled: true,
   // Frequency: show interstitial ad every 4 completed games
   gamesInterval: 4,
-  // Keep testMode true until your AdSense account & domain are approved
-  testMode: true,
+  // Live mode enabled for real ads
+  testMode: false,
   // Seconds before close/skip button becomes active in modal
   adCountdownSeconds: 3,
 };
