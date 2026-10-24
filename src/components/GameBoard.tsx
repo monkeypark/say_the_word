@@ -355,6 +355,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const currentCards = displayedCardsRef.current;
     const introConfig = INTRO_STYLES.find((s) => s.id === introStyle) || INTRO_STYLES[0];
     const introBeats = introConfig.beats > 0 ? introConfig.beats : 8;
+    // 挑战阶段不需要准备环节（“准备！轮到你了”），直接进入报词挑战
+    const effectiveIntroBeats = phase === 'challenge' ? 0 : introBeats;
     
     const effectiveLoopCount = Math.max(2, roundToPlay.loopCount || 2);
     
@@ -367,27 +369,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     setActiveCardIndex(null);
     setCurrentBeatTotal(0);
 
-    // Initial state setup (always play intro for every round)
-    setGameState('intro');
-    setIntroTotalBeats(introBeats);
-    setIntroStep(0);
-    const readyText = phase === 'demo' 
-      ? (language === 'zh' ? '示范即将开始...' : 'GET READY (LISTEN)') 
-      : (language === 'zh' ? '准备！轮到你了' : 'GET READY (YOUR TURN)');
+    // Initial state setup: demo has intro countdown, challenge enters playing immediately
+    if (phase === 'challenge') {
+      setGameState('playing');
+    } else {
+      setGameState('intro');
+      setIntroTotalBeats(effectiveIntroBeats);
+      setIntroStep(0);
+      setCountdownNum(language === 'zh' ? '示范即将开始...' : 'GET READY (LISTEN)');
+    }
 
-    // Launch unified session: Intro counts down with clean ticks,
+    // 挑战阶段不需要准备环节（“准备！轮到你了”），直接进入报词
+    // 挑战阶段的报词音乐：按照上一轮需求调换后的设定，到你了报词轮播放 0 ~ 2.626s
+    const isSwappedChallenge = phase === 'challenge';
+    const introAudioOffset = isSwappedChallenge ? effectiveAudioOffsetSec : 0;
+    const introAudioLoopEnd = isSwappedChallenge ? effectiveAudioLoopEndSec : effectiveAudioOffsetSec;
+    const gameAudioOffset = isSwappedChallenge ? 0 : effectiveAudioOffsetSec;
+    const gameAudioLoopEnd = isSwappedChallenge ? effectiveAudioOffsetSec : effectiveAudioLoopEndSec;
+
+    // Launch unified session: Intro counts down with clean ticks for demo,
     // and accompaniment drops in on downbeat 0 seamlessly!
     soundEngine.startRoundSession({
       bpm: roundToPlay.bpm,
-      introBeats,
+      introBeats: effectiveIntroBeats,
       cardsCount: currentCards.length,
       totalGameBeats: totalBeats,
       soundPack: effectiveSoundPack,
       customAudioUrl: effectiveAudioUrl,
       customIntroAudioUrl: challenge.customIntroAudioUrl,
-      audioOffsetSec: audioOffsetSec,
+      audioOffsetSec: gameAudioOffset,
+      audioLoopEndSec: gameAudioLoopEnd,
+      introAudioOffsetSec: introAudioOffset,
+      introAudioLoopEndSec: introAudioLoopEnd,
       introDurationSec: effectiveIntroDurationSec,
-      audioLoopEndSec: effectiveAudioLoopEndSec,
       baseBpm: effectiveBaseBpm,
       onIntroBeat: (currentBeat, totalBeatsCount) => {
         setGameState('intro');

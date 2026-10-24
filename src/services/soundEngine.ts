@@ -9,6 +9,8 @@ export interface RoundSessionOptions {
   customAudioUrl?: string;
   customIntroAudioUrl?: string;
   audioOffsetSec?: number;
+  introAudioOffsetSec?: number;
+  introAudioLoopEndSec?: number;
   introDurationSec?: number;
   audioLoopEndSec?: number;
   baseBpm?: number;
@@ -298,43 +300,49 @@ class SoundEngine {
     this.init();
     if (!this.ctx || !this.customAudioBuffer || this.isMuted) return;
 
-    this.stopCustomTrack();
+    this.stopCustomTrack(startTime);
 
-    this.customAudioSource = this.ctx.createBufferSource();
-    this.customAudioSource.buffer = this.customAudioBuffer;
+    const source = this.ctx.createBufferSource();
+    this.customAudioSource = source;
+    source.buffer = this.customAudioBuffer;
 
     // Scale playback speed dynamically to match customized BPM
     const safeRate = Math.max(0.2, Math.min(3.0, playbackRate || 1.0));
-    this.customAudioSource.playbackRate.setValueAtTime(safeRate, this.ctx.currentTime);
+    source.playbackRate.setValueAtTime(safeRate, this.ctx.currentTime);
 
     if (loopEndSec && loopEndSec > offsetSec) {
-      this.customAudioSource.loop = true;
-      this.customAudioSource.loopStart = offsetSec;
-      this.customAudioSource.loopEnd = loopEndSec;
+      source.loop = true;
+      source.loopStart = offsetSec;
+      source.loopEnd = loopEndSec;
     }
 
-    this.customAudioGain = this.ctx.createGain();
-    this.customAudioGain.gain.setValueAtTime(Math.max(0, volumeMultiplier), this.ctx.currentTime);
+    const gainNode = this.ctx.createGain();
+    this.customAudioGain = gainNode;
+    gainNode.gain.setValueAtTime(Math.max(0, volumeMultiplier), this.ctx.currentTime);
 
-    this.customAudioSource.connect(this.customAudioGain);
-    this.customAudioGain.connect(this.masterGain!);
+    source.connect(gainNode);
+    gainNode.connect(this.masterGain!);
 
     const playAt = Math.max(startTime, this.ctx.currentTime);
     const safeOffset = Math.min(Math.max(0, offsetSec), this.customAudioBuffer.duration - 0.05);
-    this.customAudioSource.start(playAt, safeOffset);
+    source.start(playAt, safeOffset);
   }
 
-  public stopCustomTrack() {
+  public stopCustomTrack(stopTime?: number) {
     if (this.customAudioSource) {
       try {
-        this.customAudioSource.stop();
+        if (stopTime !== undefined && this.ctx && stopTime > this.ctx.currentTime) {
+          this.customAudioSource.stop(stopTime);
+        } else {
+          this.customAudioSource.stop();
+          this.customAudioSource.disconnect();
+        }
       } catch (e) {}
-      try {
-        this.customAudioSource.disconnect();
-      } catch (e) {}
-      this.customAudioSource = null;
+      if (stopTime === undefined || (this.ctx && stopTime <= this.ctx.currentTime)) {
+        this.customAudioSource = null;
+      }
     }
-    if (this.customAudioGain) {
+    if (this.customAudioGain && (stopTime === undefined || (this.ctx && stopTime <= this.ctx.currentTime))) {
       try {
         this.customAudioGain.disconnect();
       } catch (e) {}
@@ -734,18 +742,22 @@ class SoundEngine {
 
         if (currentBeat < introBeats) {
           // --- INTRO PHASE ---
+          const introOffset = session.introAudioOffsetSec !== undefined ? session.introAudioOffsetSec : 0;
+          const introLoopEnd = session.introAudioLoopEndSec;
+
           if (currentBeat === 0) {
             if (this.customAudioBuffer) {
               this.stopCustomTrack();
-              this.playCustomTrack(scheduledTime, 0, 1.0, undefined, rate);
+              this.playCustomTrack(scheduledTime, introOffset, 1.0, introLoopEnd, rate);
             }
           }
 
           // In case custom audio buffer finished decoding slightly after beat 0 during intro
           if (!this.customAudioSource && this.customAudioBuffer) {
-            const introElapsedSec = currentBeat * secondsPerBeat;
-            const audioOffset = introElapsedSec * rate;
-            this.playCustomTrack(scheduledTime, audioOffset, 1.0, undefined, rate);
+            const introDuration = (introLoopEnd && introLoopEnd > introOffset) ? (introLoopEnd - introOffset) : (8 * (60.0 / 182.8));
+            const introElapsedSec = (currentBeat * secondsPerBeat) * rate;
+            const audioOffset = introOffset + (introElapsedSec % introDuration);
+            this.playCustomTrack(scheduledTime, audioOffset, 1.0, introLoopEnd, rate);
           }
 
           // Trigger visual callback at exact audio sync time
@@ -766,7 +778,6 @@ class SoundEngine {
             this.stopIntroMusic();
             if (this.customAudioBuffer) {
               const offset = Math.max(0, session.audioOffsetSec !== undefined ? session.audioOffsetSec : 2.626);
-              this.stopCustomTrack();
               this.playCustomTrack(scheduledTime, offset, 1.0, session.audioLoopEndSec, rate);
             }
           } else if (!this.customAudioSource && this.customAudioBuffer) {
@@ -780,8 +791,8 @@ class SoundEngine {
           }
 
           if (gameBeatIndex >= session.totalGameBeats) {
-            // Round finished: stop rhythm and fire onRoundComplete callback
-            const delayMs = Math.max(0, (scheduledTime - this.ctx.currentTime) * 1000);
+            // Round finished: stop rhythm and fire onRoundComplete callback with lookahead for gapless chaining
+            const delayMs = Math.max(0, (scheduledTime - this.ctx.currentTime) * 1000 - 40);
             setTimeout(() => {
               if (session.onRoundComplete) {
                 session.onRoundComplete(scheduledTime);
