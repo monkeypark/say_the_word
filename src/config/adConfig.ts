@@ -42,8 +42,8 @@ export const GAMES_4_AD_CONFIG: Games4AdConfig = {
   enabled: true,
   // Google AdSense Publisher ID
   publisherId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_PUB_ID) || 'ca-pub-3612854431763761',
-  // 4-games interstitial modal slot ID
-  slotId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_INTERSTITIAL_SLOT_ID) || '9775053206',
+  // 4-games square ad modal slot ID (speak on the beat square ad)
+  slotId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADSENSE_INTERSTITIAL_SLOT_ID) || '1704991499',
   // Show ad every 4 completed games
   gamesInterval: 4,
   // Live mode enabled for real ads
