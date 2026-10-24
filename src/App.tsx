@@ -12,6 +12,7 @@ import { DEFAULT_CHALLENGES, VIRAL_CLASSICS_MUSIC } from './data/defaultChalleng
 import { Challenge } from './types/game';
 import { soundEngine } from './services/soundEngine';
 import { AdService } from './services/adService';
+import { AdBanner } from './components/AdBanner';
 
 const STORAGE_KEY_CUSTOM_CHALLENGES = 'say_the_word_custom_challenges_v1';
 const STORAGE_KEY_LANGUAGE = 'say_the_word_language_v1';
@@ -375,6 +376,9 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Google AdSense Bottom Banner */}
+      <AdBanner language={language} />
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d16]/80 py-6 px-4 text-center text-xs text-slate-600 dark:text-slate-400 transition-colors shadow-xs">
