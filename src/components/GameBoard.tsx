@@ -355,8 +355,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const currentCards = displayedCardsRef.current;
     const introConfig = INTRO_STYLES.find((s) => s.id === introStyle) || INTRO_STYLES[0];
     const introBeats = introConfig.beats > 0 ? introConfig.beats : 8;
-    // 挑战阶段不需要准备环节（“准备！轮到你了”），直接进入报词挑战
-    const effectiveIntroBeats = phase === 'challenge' ? 0 : introBeats;
+    // 只有第1个关卡的示范阶段保留前奏准备环节（“示范即将开始...”），从第2个关卡开始以及所有挑战阶段均无前奏准备，无缝直入
+    const hasIntro = phase === 'demo' && safeTargetIdx === 0;
+    const effectiveIntroBeats = hasIntro ? introBeats : 0;
     
     const effectiveLoopCount = Math.max(2, roundToPlay.loopCount || 2);
     
@@ -369,14 +370,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     setActiveCardIndex(null);
     setCurrentBeatTotal(0);
 
-    // Initial state setup: demo has intro countdown, challenge enters playing immediately
-    if (phase === 'challenge') {
-      setGameState('playing');
-    } else {
+    // Initial state setup: 只有需要前奏时进入 intro，其余直接进入 playing
+    if (hasIntro) {
       setGameState('intro');
       setIntroTotalBeats(effectiveIntroBeats);
       setIntroStep(0);
       setCountdownNum(language === 'zh' ? '示范即将开始...' : 'GET READY (LISTEN)');
+    } else {
+      setGameState('playing');
     }
 
     // 挑战阶段不需要准备环节（“准备！轮到你了”），直接进入报词
