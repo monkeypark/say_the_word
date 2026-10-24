@@ -11,6 +11,7 @@ import { ChallengeCreator } from './components/ChallengeCreator';
 import { DEFAULT_CHALLENGES, VIRAL_CLASSICS_MUSIC } from './data/defaultChallenges';
 import { Challenge } from './types/game';
 import { soundEngine } from './services/soundEngine';
+import { AdService } from './services/adService';
 
 const STORAGE_KEY_CUSTOM_CHALLENGES = 'say_the_word_custom_challenges_v1';
 const STORAGE_KEY_LANGUAGE = 'say_the_word_language_v1';
@@ -58,6 +59,7 @@ export default function App() {
 
   // Load from local storage on mount
   useEffect(() => {
+    AdService.initAdSense();
     try {
       const savedLang = localStorage.getItem(STORAGE_KEY_LANGUAGE);
       if (savedLang === 'en' || savedLang === 'zh') {

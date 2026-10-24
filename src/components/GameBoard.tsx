@@ -27,6 +27,8 @@ import { Challenge, RoundConfig, GameStats, BeatJudgmentType, IntroStyleType, IN
 import { VIRAL_CLASSICS_MUSIC } from '../data/defaultChallenges';
 import { soundEngine } from '../services/soundEngine';
 import { MicDetector } from '../services/micDetector';
+import { AdService } from '../services/adService';
+import { AdModal } from './AdModal';
 
 // Fisher-Yates shuffle to randomize cards order
 function shuffleCardsArray(cards: CardItem[]): CardItem[] {
@@ -85,6 +87,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 }) => {
   const [currentRoundIdx, setCurrentRoundIdx] = useState(0);
   const [gameState, setGameState] = useState<'idle' | 'intro' | 'countdown' | 'playing' | 'allClear'>('idle');
+  const [showAdModal, setShowAdModal] = useState<boolean>(false);
+  const [gamesCompletedCount, setGamesCompletedCount] = useState<number>(() => AdService.getGamesPlayedCount());
   const [countdownNum, setCountdownNum] = useState<number | string>(4);
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
   const [maxRevealedIdx, setMaxRevealedIdx] = useState<number>(-1);
@@ -455,6 +459,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
       if (roundIdx + 1 >= totalRounds) {
         soundEngine.stopRhythm();
+        const newCount = AdService.incrementGamesPlayed();
+        setGamesCompletedCount(newCount);
+
         roundEndTimeoutRef.current = setTimeout(() => {
           setGameState('allClear');
           soundEngine.playAirhorn();
@@ -463,6 +470,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             spread: 100,
             origin: { y: 0.6 },
           });
+
+          // Google AdSense: trigger interstitial modal every 4 completed games
+          if (AdService.shouldShowAd(newCount)) {
+            setTimeout(() => {
+              setShowAdModal(true);
+            }, 800);
+          }
         }, 2000);
       } else {
         // Seamlessly move to the demo of the next round
@@ -1127,9 +1141,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
               {language === 'zh' ? `恭喜全部 ${totalRounds} 关通关!` : 'ALL LEVELS CLEARED!'}
             </h3>
-            <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold mb-6">
+            <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold mb-4">
               {language === 'zh' ? '你的嘴速与节奏感已达封神水准！' : 'Godlike Rhythm Master on TikTok!'}
             </p>
+
+            {/* Ad Frequency & Games Progress Badge */}
+            <div className="mb-6 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              <Sparkles className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+              <span>{language === 'zh' ? '已完成:' : 'Finished:'}</span>
+              <span className="font-bold text-pink-500 font-mono">{gamesCompletedCount} {language === 'zh' ? '局' : 'games'}</span>
+              <span>•</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {language === 'zh'
+                  ? `广告进度: ${((gamesCompletedCount - 1) % 4) + 1}/4`
+                  : `Ad: ${((gamesCompletedCount - 1) % 4) + 1}/4`}
+              </span>
+            </div>
 
             {/* Action Buttons */}
 
@@ -1157,6 +1184,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Google AdSense Interstitial Modal (Every 4 completed games) */}
+      <AdModal
+        isOpen={showAdModal}
+        onClose={() => setShowAdModal(false)}
+        language={language}
+        gamesCompletedCount={gamesCompletedCount}
+      />
     </div>
   );
 };
