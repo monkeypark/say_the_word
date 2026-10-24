@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { X, Sparkles, ShieldCheck, Clock } from 'lucide-react';
-import { AD_CONFIG } from '../config/adConfig';
+import { GAMES_4_AD_CONFIG } from '../config/adConfig';
 
 interface AdModalProps {
   isOpen: boolean;
@@ -21,13 +21,13 @@ export const AdModal: React.FC<AdModalProps> = ({
   language,
   gamesCompletedCount,
 }) => {
-  const [countdown, setCountdown] = useState<number>(AD_CONFIG.adCountdownSeconds || 3);
+  const [countdown, setCountdown] = useState<number>(GAMES_4_AD_CONFIG.adCountdownSeconds || 3);
   const [adLoaded, setAdLoaded] = useState<boolean>(false);
   const adPushedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!isOpen) {
-      setCountdown(AD_CONFIG.adCountdownSeconds || 3);
+      setCountdown(GAMES_4_AD_CONFIG.adCountdownSeconds || 3);
       adPushedRef.current = false;
       return;
     }
@@ -116,15 +116,15 @@ export const AdModal: React.FC<AdModalProps> = ({
             <ins
               className="adsbygoogle"
               style={{ display: 'block', width: '100%', minWidth: '280px', minHeight: '250px' }}
-              data-ad-client={AD_CONFIG.publisherId}
-              data-ad-slot={AD_CONFIG.slotId}
+              data-ad-client={GAMES_4_AD_CONFIG.publisherId}
+              data-ad-slot={GAMES_4_AD_CONFIG.slotId}
               data-ad-format="auto"
               data-full-width-responsive="true"
             />
           </div>
 
           {/* Test Mode / Fallback Card when testMode is active */}
-          {AD_CONFIG.testMode && (
+          {GAMES_4_AD_CONFIG.testMode && (
             <div className="absolute inset-0 bg-slate-50/95 dark:bg-slate-900/95 flex flex-col items-center justify-center p-5 text-center pointer-events-none">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-3">
                 <ShieldCheck className="w-7 h-7" />
@@ -134,13 +134,13 @@ export const AdModal: React.FC<AdModalProps> = ({
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mb-3">
                 {language === 'zh'
-                  ? '每 4 局游戏展示一次插屏广告。正式上线前请在 src/config/adConfig.ts 填入您的真实 Publisher ID。'
-                  : 'Shown every 4 completed games. Replace publisher ID in src/config/adConfig.ts with your real AdSense ID.'}
+                  ? '每 4 局游戏展示一次插屏广告。'
+                  : 'Shown every 4 completed games.'}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-200/50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                <span>Client: {AD_CONFIG.publisherId}</span>
+                <span>Client: {GAMES_4_AD_CONFIG.publisherId}</span>
                 <span>•</span>
-                <span>Slot: {AD_CONFIG.slotId}</span>
+                <span>Slot: {GAMES_4_AD_CONFIG.slotId}</span>
               </div>
             </div>
           )}

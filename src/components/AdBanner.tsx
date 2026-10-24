@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AD_CONFIG } from '../config/adConfig';
+import { BANNER_AD_CONFIG } from '../config/adConfig';
 
 interface AdBannerProps {
   language?: 'zh' | 'en';
@@ -15,7 +15,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ language = 'zh' }) => {
   const pushedRef = useRef(false);
 
   useEffect(() => {
-    if (!AD_CONFIG.enabled || !AD_CONFIG.bannerEnabled) return;
+    if (!BANNER_AD_CONFIG.enabled) return;
 
     if (!pushedRef.current) {
       pushedRef.current = true;
@@ -31,7 +31,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ language = 'zh' }) => {
     }
   }, []);
 
-  if (!AD_CONFIG.enabled || !AD_CONFIG.bannerEnabled) return null;
+  if (!BANNER_AD_CONFIG.enabled) return null;
 
   return (
     <div className="w-full py-1 px-3 bg-slate-50 dark:bg-[#0a0d16] border-t border-slate-200/80 dark:border-slate-800/80 transition-colors">
@@ -48,8 +48,8 @@ export const AdBanner: React.FC<AdBannerProps> = ({ language = 'zh' }) => {
           <ins
             className="adsbygoogle"
             style={{ display: 'block', width: '100%', height: '50px', minHeight: '50px', maxHeight: '60px' }}
-            data-ad-client={AD_CONFIG.publisherId}
-            data-ad-slot={AD_CONFIG.bannerSlotId}
+            data-ad-client={BANNER_AD_CONFIG.publisherId}
+            data-ad-slot={BANNER_AD_CONFIG.slotId}
             data-ad-format="auto"
             data-full-width-responsive="true"
           />

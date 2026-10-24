@@ -1,4 +1,4 @@
-import { AD_CONFIG } from '../config/adConfig';
+import { GAMES_4_AD_CONFIG, BANNER_AD_CONFIG } from '../config/adConfig';
 
 const STORAGE_KEY_GAMES_COUNT = 'say_the_word_games_played_count_v1';
 
@@ -7,13 +7,15 @@ export class AdService {
    * Dynamically ensure Google AdSense script is injected into <head>
    */
   public static initAdSense(): void {
-    if (typeof window === 'undefined' || !AD_CONFIG.enabled) return;
+    if (typeof window === 'undefined') return;
+    if (!GAMES_4_AD_CONFIG.enabled && !BANNER_AD_CONFIG.enabled) return;
 
     const existing = document.querySelector('script[src*="pagead2.googlesyndication.com"]');
     if (!existing) {
+      const pubId = BANNER_AD_CONFIG.publisherId || GAMES_4_AD_CONFIG.publisherId;
       const script = document.createElement('script');
       script.async = true;
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${AD_CONFIG.publisherId}`;
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${pubId}`;
       script.crossOrigin = 'anonymous';
       document.head.appendChild(script);
     }
@@ -50,9 +52,9 @@ export class AdService {
    * E.g. every 4 games (game 4, 8, 12, 16...)
    */
   public static shouldShowAd(count?: number): boolean {
-    if (!AD_CONFIG.enabled) return false;
+    if (!GAMES_4_AD_CONFIG.enabled) return false;
     const current = count !== undefined ? count : this.getGamesPlayedCount();
-    return current > 0 && current % AD_CONFIG.gamesInterval === 0;
+    return current > 0 && current % GAMES_4_AD_CONFIG.gamesInterval === 0;
   }
 
   /**
@@ -60,7 +62,7 @@ export class AdService {
    */
   public static getNextAdProgress(count?: number): { current: number; total: number } {
     const current = count !== undefined ? count : this.getGamesPlayedCount();
-    const interval = AD_CONFIG.gamesInterval;
+    const interval = GAMES_4_AD_CONFIG.gamesInterval;
     const modulo = current % interval;
     return {
       current: modulo === 0 && current > 0 ? interval : modulo,
