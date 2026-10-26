@@ -377,8 +377,8 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d16]/80 py-4 px-4 text-center text-xs text-slate-600 dark:text-slate-400 transition-colors shadow-xs">
+      {/* Footer - hide on mobile during gameplay to keep game board fitted on screen */}
+      <footer className={`${selectedChallenge ? 'hidden sm:block' : 'block'} border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d16]/80 py-4 px-4 text-center text-xs text-slate-600 dark:text-slate-400 transition-colors shadow-xs`}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-black text-pink-400">SPEAK ON THE BEAT</span>

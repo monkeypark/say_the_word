@@ -545,14 +545,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
 
     // For more than 4 cards, split into rows of 3 or 4
-    // Priority: If multiple of 4, use 4 cols. If multiple of 3, use 3 cols. Else default to 4 cols.
+    // Priority: If multiple of 4 (e.g. 8 cards), use 2 cols on mobile and 4 cols on tablet/desktop
     if (count % 4 === 0) {
-      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 max-w-5xl';
+      return 'grid-cols-2 sm:grid-cols-4 max-w-5xl';
     }
     if (count % 3 === 0) {
       return 'grid-cols-2 sm:grid-cols-3 max-w-4xl';
     }
-    return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 max-w-5xl';
+    return 'grid-cols-2 sm:grid-cols-4 max-w-5xl';
   };
 
   // Calculate Accuracy
@@ -569,9 +569,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto flex flex-col p-2.5 sm:p-4 select-none overflow-x-hidden space-y-3">
+    <div className="relative w-full max-w-5xl mx-auto flex flex-col p-1.5 xs:p-2 sm:p-4 select-none overflow-x-hidden space-y-1.5 sm:space-y-3">
       {/* Top Rhythm HUD */}
-      <div className="w-full flex items-center justify-between gap-2 sm:gap-4 bg-white dark:bg-[#0f1422] border border-slate-200 dark:border-slate-800/80 rounded-xl sm:rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 shadow-sm dark:shadow-md min-w-0 transition-colors">
+      <div className="w-full flex items-center justify-between gap-1.5 sm:gap-4 bg-white dark:bg-[#0f1422] border border-slate-200 dark:border-slate-800/80 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-1.5 sm:py-3 shadow-sm dark:shadow-md min-w-0 transition-colors">
         {/* Left: Back & Track Info */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
@@ -686,27 +686,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         )}
 
-        {/* PROMINENT GAMEPLAY STATUS BANNER (Fixed height container to prevent layout jumping) */}
-        <div className="w-full max-w-md mx-auto h-14 flex items-center justify-center mb-3">
+        {/* PROMINENT GAMEPLAY STATUS BANNER (Compact & responsive height to fit mobile screens) */}
+        <div className="w-full max-w-md mx-auto h-8 xs:h-10 sm:h-14 flex items-center justify-center mb-1 xs:mb-1.5 sm:mb-3">
           {(gameState === 'playing' || gameState === 'intro') ? (
-            <div className={`px-6 py-2 rounded-2xl border-2 flex items-center gap-3 shadow-lg transition-colors duration-150 ${
+            <div className={`px-3 py-1 sm:px-6 sm:py-2 rounded-xl sm:rounded-2xl border-2 flex items-center gap-2 sm:gap-3 shadow-md sm:shadow-lg transition-colors duration-150 ${
               gameState === 'intro'
                 ? 'bg-amber-500/20 border-amber-400/60 text-amber-300 shadow-amber-500/20'
                 : isPreLoop 
                 ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300 shadow-indigo-500/20' 
                 : 'bg-pink-600/20 border-pink-500/50 text-pink-300 shadow-pink-500/20'
             }`}>
-              <div className={`w-3 h-3 rounded-full animate-pulse ${
+              <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full animate-pulse ${
                 gameState === 'intro' ? 'bg-amber-400' : isPreLoop ? 'bg-indigo-400' : 'bg-pink-400'
               }`} />
-              <span className="text-lg sm:text-xl font-black uppercase tracking-[0.15em]">
+              <span className="text-xs xs:text-sm sm:text-xl font-black uppercase tracking-wider sm:tracking-[0.15em]">
                 {gameState === 'intro'
                   ? String(countdownNum)
                   : isPreLoop 
                   ? (language === 'zh' ? '示范中 · 准备' : 'DEMO · GET READY') 
                   : (language === 'zh' ? '到你了 · 报词！' : 'YOUR TURN!')}
               </span>
-              <div className={`w-3 h-3 rounded-full animate-pulse ${
+              <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full animate-pulse ${
                 gameState === 'intro' ? 'bg-amber-400' : isPreLoop ? 'bg-indigo-400' : 'bg-pink-400'
               }`} />
             </div>
@@ -717,7 +717,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
         {/* CARDS DISPLAY GRID (Only shown during active gameplay/intro/countdown/allClear) */}
         {gameState !== 'idle' && (
-          <div className={`grid gap-3 sm:gap-4 w-full mx-auto ${getGridColsClass(displayedCards.length)} items-stretch`}>
+          <div className={`grid gap-1.5 xs:gap-2 sm:gap-4 w-full mx-auto ${getGridColsClass(displayedCards.length)} items-stretch`}>
           {displayedCards.map((card, idx) => {
             const isActive = activeCardIndex === idx;
             // 到你时（!isPreLoop）卡片全开；示范阶段（isPreLoop）跟随节拍翻开；通关全开
@@ -728,31 +728,35 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               return (
                 <div
                   key={`mystery-card-${idx}`}
-                  className="relative flex flex-col justify-between rounded-2xl p-3 sm:p-4 h-52 sm:h-64 bg-slate-100 dark:bg-[#0a0e1a]/95 border-2 border-slate-200 dark:border-slate-800/80 shadow-inner select-none transition-all duration-150"
+                  className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-4 ${
+                    displayedCards.length > 4
+                      ? 'h-[clamp(74px,10.6vh,115px)] sm:h-52 md:h-64'
+                      : 'h-36 sm:h-56 md:h-64'
+                  } bg-slate-100 dark:bg-[#0a0e1a]/95 border-2 border-slate-200 dark:border-slate-800/80 shadow-inner select-none transition-all duration-150`}
                 >
                   {/* Card Number Badge */}
-                  <div className="flex items-center justify-between h-7">
-                    <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
+                  <div className="flex items-center justify-between h-4 sm:h-7">
+                    <span className="w-4 h-4 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
                       {idx + 1}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-slate-600 dark:text-slate-400 dark:text-slate-500" />
+                    <span className="text-[8px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 dark:text-slate-400" />
                       {language === 'zh' ? '隐藏' : 'LOCKED'}
                     </span>
                   </div>
 
                   {/* Mystery Center */}
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 flex items-center justify-center text-3xl sm:text-4xl text-slate-600 dark:text-slate-400 dark:text-slate-500 font-black shadow-inner">
+                    <div className="w-7 h-7 sm:w-16 sm:h-20 rounded-lg sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 flex items-center justify-center text-base sm:text-3xl text-slate-600 dark:text-slate-400 font-black shadow-inner">
                       <span className="animate-pulse text-pink-500 dark:text-pink-400/80">?</span>
                     </div>
-                    <span className="text-[11px] text-slate-600 dark:text-slate-400 dark:text-slate-500 font-semibold mt-3 tracking-widest uppercase">
+                    <span className="text-[8px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-0.5 sm:mt-2 tracking-widest uppercase">
                       {language === 'zh' ? '示范中翻牌' : 'ON BEAT'}
                     </span>
                   </div>
 
                   {/* Footer spacer */}
-                  <div className="h-4" />
+                  <div className="h-1 sm:h-4" />
                 </div>
               );
             }
@@ -761,18 +765,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <div
                 key={`board-card-${card.id || idx}-${idx}`}
                 onClick={() => gameState === 'playing' && handleHitAttempt('tap')}
-                className={`relative flex flex-col justify-between rounded-2xl p-3 sm:p-4 h-52 sm:h-64 cursor-pointer select-none overflow-hidden transition-[border-color,background-color,box-shadow,transform,opacity] duration-100 ${
+                className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-4 ${
+                  displayedCards.length > 4
+                    ? 'h-[clamp(74px,10.6vh,115px)] sm:h-52 md:h-64'
+                    : 'h-36 sm:h-56 md:h-64'
+                } cursor-pointer select-none overflow-hidden transition-[border-color,background-color,box-shadow,transform,opacity] duration-100 ${
                   isActive
-                    ? 'bg-pink-50/60 dark:bg-[#181f33] border-2 border-pink-500 shadow-xl shadow-pink-500/20 dark:shadow-pink-500/30 scale-[1.02] z-10 opacity-100'
+                    ? 'bg-pink-50/60 dark:bg-[#181f33] border-2 border-pink-500 shadow-md sm:shadow-xl shadow-pink-500/20 dark:shadow-pink-500/30 scale-[1.02] z-10 opacity-100'
                     : gameState === 'intro'
                     ? 'bg-white dark:bg-[#0f1422] border-2 border-pink-500/30 opacity-90 shadow-sm'
                     : 'bg-white dark:bg-[#0f1422] border-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-100 shadow-sm'
                 }`}
               >
                 {/* Header bar with fixed height (prevents active badge from stretching card) */}
-                <div className="flex items-center justify-between h-7">
+                <div className="flex items-center justify-between h-4 sm:h-7">
                   <span
-                    className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-colors ${
+                    className={`w-4 h-4 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black transition-colors ${
                       isActive ? 'bg-pink-500 text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
                     }`}
                   >
@@ -780,42 +788,40 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   </span>
 
                   {/* Absolute or fixed positioned status tag */}
-                  <div className="flex items-center gap-1.5 min-h-[22px]">
+                  <div className="flex items-center gap-1 min-h-[16px] sm:min-h-[22px]">
                     {isActive && (
-                      <span className={`text-[10px] sm:text-[11px] font-black uppercase px-2 py-0.5 rounded-md ${
+                      <span className={`text-[8px] sm:text-[11px] font-black uppercase px-1 sm:px-2 py-0.2 sm:py-0.5 rounded ${
                         isPreLoop ? 'bg-indigo-500/20 dark:bg-indigo-500/40 text-indigo-700 dark:text-indigo-100' : 'bg-pink-500/20 dark:bg-pink-500/40 text-pink-700 dark:text-pink-100 animate-pulse'
                       }`}>
                         {isPreLoop 
                           ? (language === 'zh' ? '准备' : 'READY') 
-                          : (language === 'zh' ? '到你了 · 报词!' : 'YOUR TURN!')}
+                          : (language === 'zh' ? '报词!' : 'YOUR TURN!')}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Card Body based on mode - fixed height container */}
+                {/* Card Body based on mode - compact & responsive */}
                 {mode === 'text' ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center px-1">
+                  <div className="flex-1 flex flex-col items-center justify-center text-center px-0.5 sm:px-1">
                     <div
                       className={`font-black tracking-tight leading-tight line-clamp-2 ${
                         card.word.length > 5
-                          ? 'text-xl sm:text-2xl md:text-3xl'
-                          : 'text-2xl sm:text-4xl md:text-5xl'
+                          ? 'text-xs xs:text-sm sm:text-2xl md:text-3xl'
+                          : 'text-sm xs:text-base sm:text-4xl md:text-5xl'
                       } ${isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}
                     >
                       {card.word}
                     </div>
-                    {card.subtext ? (
-                      <div className="text-xs text-slate-600 dark:text-slate-500 dark:text-slate-400 font-medium mt-2 max-w-[90%] truncate">
+                    {card.subtext && (
+                      <div className="hidden xs:block text-[9px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5 sm:mt-2 max-w-[95%] truncate">
                         {card.subtext}
                       </div>
-                    ) : (
-                      <div className="h-4" />
                     )}
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center py-1">
-                    <div className="h-20 sm:h-28 flex items-center justify-center w-full">
+                  <div className="flex-1 flex flex-col items-center justify-center py-0.5 sm:py-1">
+                    <div className="h-6 xs:h-8 sm:h-20 md:h-24 flex items-center justify-center w-full">
                       {card.imageUrl ? (
                         <img
                           src={card.imageUrl}
@@ -824,7 +830,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         />
                       ) : (
                         <span
-                          className={`text-4xl sm:text-6xl transition-transform duration-100 ${
+                          className={`text-xl xs:text-2xl sm:text-5xl md:text-6xl transition-transform duration-100 ${
                             isActive ? 'scale-110' : 'scale-100'
                           }`}
                         >
@@ -833,17 +839,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       )}
                     </div>
 
-                    <div className="w-full text-center mt-2">
+                    <div className="w-full text-center mt-0.5 sm:mt-2">
                       <div
-                        className={`text-lg sm:text-xl font-bold tracking-tight truncate transition-colors ${
+                        className={`text-xs xs:text-sm sm:text-xl font-bold tracking-tight truncate transition-colors ${
                           isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-200'
                         }`}
                       >
                         {card.word}
                       </div>
-                      <div className="text-xs text-slate-600 dark:text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate h-4">
-                        {mode === 'mixed' && card.subtext ? card.subtext : ''}
-                      </div>
+                      {mode === 'mixed' && card.subtext && (
+                        <div className="hidden xs:block text-[9px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5 truncate h-3.5">
+                          {card.subtext}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
