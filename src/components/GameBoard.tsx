@@ -728,25 +728,25 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               return (
                 <div
                   key={`mystery-card-${idx}`}
-                  className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-2 xs:p-2.5 sm:p-4 ${
+                  className={`relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl p-2 sm:p-4 ${
                     displayedCards.length > 4
                       ? 'h-[clamp(88px,12.8vh,140px)] sm:h-52 md:h-64'
                       : 'h-40 sm:h-56 md:h-64'
                   } bg-slate-100 dark:bg-[#0a0e1a]/95 border-2 border-slate-200 dark:border-slate-800/80 shadow-inner select-none transition-all duration-150`}
                 >
-                  {/* Card Number Badge */}
-                  <div className="flex items-center justify-between h-5 sm:h-7">
-                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
-                      {idx + 1}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 dark:text-slate-400" />
-                      {language === 'zh' ? '隐藏' : 'LOCKED'}
-                    </span>
-                  </div>
+                  {/* Card Number Badge - Absolute top-left */}
+                  <span className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 w-5 h-5 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
+                    {idx + 1}
+                  </span>
+
+                  {/* Locked indicator - Absolute top-right */}
+                  <span className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 dark:text-slate-400" />
+                    {language === 'zh' ? '隐藏' : 'LOCKED'}
+                  </span>
 
                   {/* Mystery Center */}
-                  <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="w-full flex flex-col items-center justify-center text-center px-1">
                     <div className="w-9 h-9 sm:w-16 sm:h-20 rounded-lg sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 flex items-center justify-center text-xl sm:text-3xl text-slate-600 dark:text-slate-400 font-black shadow-inner">
                       <span className="animate-pulse text-pink-500 dark:text-pink-400/80">?</span>
                     </div>
@@ -754,9 +754,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       {language === 'zh' ? '示范中翻牌' : 'ON BEAT'}
                     </span>
                   </div>
-
-                  {/* Footer spacer */}
-                  <div className="h-1 sm:h-4" />
                 </div>
               );
             }
@@ -765,7 +762,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <div
                 key={`board-card-${card.id || idx}-${idx}`}
                 onClick={() => gameState === 'playing' && handleHitAttempt('tap')}
-                className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-2 xs:p-2.5 sm:p-4 ${
+                className={`relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl p-2 sm:p-4 ${
                   displayedCards.length > 4
                     ? 'h-[clamp(88px,12.8vh,140px)] sm:h-52 md:h-64'
                     : 'h-40 sm:h-56 md:h-64'
@@ -777,84 +774,70 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     : 'bg-white dark:bg-[#0f1422] border-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-100 shadow-sm'
                 }`}
               >
-                {/* Header bar with fixed height (prevents active badge from stretching card) */}
-                <div className="flex items-center justify-between h-5 sm:h-7">
-                  <span
-                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black transition-colors ${
-                      isActive ? 'bg-pink-500 text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    {idx + 1}
+                {/* Header Badge - Absolute top-left */}
+                <span
+                  className={`absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 w-5 h-5 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black transition-colors ${
+                    isActive ? 'bg-pink-500 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  {idx + 1}
+                </span>
+
+                {/* Status tag - Absolute top-right */}
+                {isActive && (
+                  <span className={`absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 text-[9px] sm:text-[11px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded shadow-xs ${
+                    isPreLoop ? 'bg-indigo-500/20 dark:bg-indigo-500/40 text-indigo-700 dark:text-indigo-100 border border-indigo-400/30' : 'bg-pink-500/20 dark:bg-pink-500/40 text-pink-700 dark:text-pink-100 border border-pink-400/30 animate-pulse'
+                  }`}>
+                    {isPreLoop 
+                      ? (language === 'zh' ? '准备' : 'READY') 
+                      : (language === 'zh' ? '报词!' : 'YOUR TURN!')}
                   </span>
+                )}
 
-                  {/* Absolute or fixed positioned status tag */}
-                  <div className="flex items-center gap-1 min-h-[16px] sm:min-h-[22px]">
-                    {isActive && (
-                      <span className={`text-[9px] sm:text-[11px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded ${
-                        isPreLoop ? 'bg-indigo-500/20 dark:bg-indigo-500/40 text-indigo-700 dark:text-indigo-100' : 'bg-pink-500/20 dark:bg-pink-500/40 text-pink-700 dark:text-pink-100 animate-pulse'
-                      }`}>
-                        {isPreLoop 
-                          ? (language === 'zh' ? '准备' : 'READY') 
-                          : (language === 'zh' ? '报词!' : 'YOUR TURN!')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card Body based on mode - compact & responsive */}
-                {mode === 'text' ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center px-0.5 sm:px-1">
-                    <div
-                      className={`font-black tracking-tight leading-tight line-clamp-2 ${
-                        card.word.length > 5
-                          ? 'text-sm xs:text-base sm:text-2xl md:text-3xl'
-                          : 'text-base xs:text-lg sm:text-4xl md:text-5xl'
-                      } ${isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}
-                    >
-                      {card.word}
-                    </div>
-                    {card.subtext && (
-                      <div className="hidden xs:block text-[9px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium mt-1 sm:mt-2 max-w-[95%] truncate">
-                        {card.subtext}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center py-1 sm:py-1.5">
-                    <div className="h-9 xs:h-11 sm:h-20 md:h-24 flex items-center justify-center w-full">
-                      {card.imageUrl ? (
+                {/* Card Center Body - Letters fill and center inside the card */}
+                <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-1">
+                  {/* Emoji / Image above the word if available */}
+                  {mode !== 'text' && (
+                    card.imageUrl ? (
+                      <div className="h-7 xs:h-8 sm:h-14 flex items-center justify-center mb-0.5">
                         <img
                           src={card.imageUrl}
                           alt={card.word}
-                          className="max-h-full max-w-full object-contain rounded-lg"
+                          className="max-h-full max-w-full object-contain rounded-md"
                         />
-                      ) : (
-                        <span
-                          className={`text-2xl xs:text-3xl sm:text-5xl md:text-6xl transition-transform duration-100 ${
-                            isActive ? 'scale-110' : 'scale-100'
-                          }`}
-                        >
-                          {card.emoji || '⭐'}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="w-full text-center mt-1 sm:mt-2">
-                      <div
-                        className={`text-sm xs:text-base sm:text-xl font-bold tracking-tight truncate transition-colors ${
-                          isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-200'
+                      </div>
+                    ) : card.emoji ? (
+                      <span
+                        className={`text-xl xs:text-2xl sm:text-4xl transition-transform duration-100 leading-none mb-1 ${
+                          isActive ? 'scale-110' : 'scale-100'
                         }`}
                       >
-                        {card.word}
-                      </div>
-                      {mode === 'mixed' && card.subtext && (
-                        <div className="hidden xs:block text-[9px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5 truncate h-3.5">
-                          {card.subtext}
-                        </div>
-                      )}
-                    </div>
+                        {card.emoji}
+                      </span>
+                    ) : null
+                  )}
+
+                  {/* Main Word / Letters - Large and filling center */}
+                  <div
+                    className={`font-black tracking-tight leading-tight w-full transition-colors ${
+                      mode === 'text'
+                        ? card.word.length > 5
+                          ? 'text-lg xs:text-xl sm:text-3xl md:text-4xl'
+                          : 'text-2xl xs:text-3xl sm:text-4xl md:text-5xl'
+                        : card.word.length > 5
+                        ? 'text-sm xs:text-base sm:text-2xl md:text-3xl'
+                        : 'text-lg xs:text-xl sm:text-2xl md:text-3xl'
+                    } ${isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}
+                  >
+                    {card.word}
                   </div>
-                )}
+
+                  {card.subtext && (
+                    <div className="hidden xs:block text-[9px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 max-w-[90%] truncate">
+                      {card.subtext}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
