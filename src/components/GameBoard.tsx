@@ -728,18 +728,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               return (
                 <div
                   key={`mystery-card-${idx}`}
-                  className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-4 ${
+                  className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-2 xs:p-2.5 sm:p-4 ${
                     displayedCards.length > 4
-                      ? 'h-[clamp(74px,10.6vh,115px)] sm:h-52 md:h-64'
-                      : 'h-36 sm:h-56 md:h-64'
+                      ? 'h-[clamp(88px,12.8vh,140px)] sm:h-52 md:h-64'
+                      : 'h-40 sm:h-56 md:h-64'
                   } bg-slate-100 dark:bg-[#0a0e1a]/95 border-2 border-slate-200 dark:border-slate-800/80 shadow-inner select-none transition-all duration-150`}
                 >
                   {/* Card Number Badge */}
-                  <div className="flex items-center justify-between h-4 sm:h-7">
-                    <span className="w-4 h-4 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
+                  <div className="flex items-center justify-between h-5 sm:h-7">
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black bg-slate-200 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700/60">
                       {idx + 1}
                     </span>
-                    <span className="text-[8px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
                       <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 dark:text-slate-400" />
                       {language === 'zh' ? '隐藏' : 'LOCKED'}
                     </span>
@@ -747,10 +747,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                   {/* Mystery Center */}
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="w-7 h-7 sm:w-16 sm:h-20 rounded-lg sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 flex items-center justify-center text-base sm:text-3xl text-slate-600 dark:text-slate-400 font-black shadow-inner">
+                    <div className="w-9 h-9 sm:w-16 sm:h-20 rounded-lg sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 flex items-center justify-center text-xl sm:text-3xl text-slate-600 dark:text-slate-400 font-black shadow-inner">
                       <span className="animate-pulse text-pink-500 dark:text-pink-400/80">?</span>
                     </div>
-                    <span className="text-[8px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-0.5 sm:mt-2 tracking-widest uppercase">
+                    <span className="text-[9px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-1 sm:mt-2 tracking-widest uppercase">
                       {language === 'zh' ? '示范中翻牌' : 'ON BEAT'}
                     </span>
                   </div>
@@ -765,10 +765,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <div
                 key={`board-card-${card.id || idx}-${idx}`}
                 onClick={() => gameState === 'playing' && handleHitAttempt('tap')}
-                className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-1.5 xs:p-2 sm:p-4 ${
+                className={`relative flex flex-col justify-between rounded-xl sm:rounded-2xl p-2 xs:p-2.5 sm:p-4 ${
                   displayedCards.length > 4
-                    ? 'h-[clamp(74px,10.6vh,115px)] sm:h-52 md:h-64'
-                    : 'h-36 sm:h-56 md:h-64'
+                    ? 'h-[clamp(88px,12.8vh,140px)] sm:h-52 md:h-64'
+                    : 'h-40 sm:h-56 md:h-64'
                 } cursor-pointer select-none overflow-hidden transition-[border-color,background-color,box-shadow,transform,opacity] duration-100 ${
                   isActive
                     ? 'bg-pink-50/60 dark:bg-[#181f33] border-2 border-pink-500 shadow-md sm:shadow-xl shadow-pink-500/20 dark:shadow-pink-500/30 scale-[1.02] z-10 opacity-100'
@@ -778,9 +778,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 }`}
               >
                 {/* Header bar with fixed height (prevents active badge from stretching card) */}
-                <div className="flex items-center justify-between h-4 sm:h-7">
+                <div className="flex items-center justify-between h-5 sm:h-7">
                   <span
-                    className={`w-4 h-4 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black transition-colors ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded sm:rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black transition-colors ${
                       isActive ? 'bg-pink-500 text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
                     }`}
                   >
@@ -790,7 +790,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   {/* Absolute or fixed positioned status tag */}
                   <div className="flex items-center gap-1 min-h-[16px] sm:min-h-[22px]">
                     {isActive && (
-                      <span className={`text-[8px] sm:text-[11px] font-black uppercase px-1 sm:px-2 py-0.2 sm:py-0.5 rounded ${
+                      <span className={`text-[9px] sm:text-[11px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded ${
                         isPreLoop ? 'bg-indigo-500/20 dark:bg-indigo-500/40 text-indigo-700 dark:text-indigo-100' : 'bg-pink-500/20 dark:bg-pink-500/40 text-pink-700 dark:text-pink-100 animate-pulse'
                       }`}>
                         {isPreLoop 
@@ -807,21 +807,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     <div
                       className={`font-black tracking-tight leading-tight line-clamp-2 ${
                         card.word.length > 5
-                          ? 'text-xs xs:text-sm sm:text-2xl md:text-3xl'
-                          : 'text-sm xs:text-base sm:text-4xl md:text-5xl'
+                          ? 'text-sm xs:text-base sm:text-2xl md:text-3xl'
+                          : 'text-base xs:text-lg sm:text-4xl md:text-5xl'
                       } ${isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}
                     >
                       {card.word}
                     </div>
                     {card.subtext && (
-                      <div className="hidden xs:block text-[9px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5 sm:mt-2 max-w-[95%] truncate">
+                      <div className="hidden xs:block text-[9px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium mt-1 sm:mt-2 max-w-[95%] truncate">
                         {card.subtext}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center py-0.5 sm:py-1">
-                    <div className="h-6 xs:h-8 sm:h-20 md:h-24 flex items-center justify-center w-full">
+                  <div className="flex-1 flex flex-col items-center justify-center py-1 sm:py-1.5">
+                    <div className="h-9 xs:h-11 sm:h-20 md:h-24 flex items-center justify-center w-full">
                       {card.imageUrl ? (
                         <img
                           src={card.imageUrl}
@@ -830,7 +830,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         />
                       ) : (
                         <span
-                          className={`text-xl xs:text-2xl sm:text-5xl md:text-6xl transition-transform duration-100 ${
+                          className={`text-2xl xs:text-3xl sm:text-5xl md:text-6xl transition-transform duration-100 ${
                             isActive ? 'scale-110' : 'scale-100'
                           }`}
                         >
@@ -839,9 +839,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       )}
                     </div>
 
-                    <div className="w-full text-center mt-0.5 sm:mt-2">
+                    <div className="w-full text-center mt-1 sm:mt-2">
                       <div
-                        className={`text-xs xs:text-sm sm:text-xl font-bold tracking-tight truncate transition-colors ${
+                        className={`text-sm xs:text-base sm:text-xl font-bold tracking-tight truncate transition-colors ${
                           isActive ? 'text-pink-600 dark:text-white' : 'text-slate-900 dark:text-slate-200'
                         }`}
                       >
