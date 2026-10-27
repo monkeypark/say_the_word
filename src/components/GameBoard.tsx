@@ -45,18 +45,19 @@ function shuffleCardsArray(cards: CardItem[]): CardItem[] {
   return shuffled;
 }
 
-// Ensure fixed 8 cards per round: if pool < 8, cycles through pool; if > 8, takes 8 cards
-function ensure8Cards(pool: CardItem[], shuffle: boolean): CardItem[] {
+// Pick cards for each round: Round 1 (2 words), Round 2 (3 words), Round 3 (4 words), Round 4 (5 words), Round 5 (6 words)
+function getCardsForRound(pool: CardItem[], roundIdx: number, shuffle: boolean, targetCount?: number): CardItem[] {
   if (!pool || pool.length === 0) return [];
+  const count = (targetCount && targetCount > 0) ? targetCount : (roundIdx + 2);
   const base = shuffle ? shuffleCardsArray(pool) : [...pool];
-  if (base.length === 8) return base;
-  if (base.length > 8) return base.slice(0, 8);
+  if (base.length === count) return base;
+  if (base.length > count) return base.slice(0, count);
 
-  // Pad up to 8 cards by cycling through base
+  // Pad up to count cards by cycling through base
   const result: CardItem[] = [];
-  while (result.length < 8) {
+  while (result.length < count) {
     for (const card of base) {
-      if (result.length >= 8) break;
+      if (result.length >= count) break;
       result.push({
         ...card,
         id: `${card.id || 'card'}-${result.length}`,
@@ -144,10 +145,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     challenge.shuffleCards !== undefined ? challenge.shuffleCards : true
   );
 
-  // Active displayed cards (fixed 8 cards every game)
+  // Active displayed cards (Round 1: 2 words, Round 2: 3 words, Round 3: 4 words...)
   const [displayedCards, setDisplayedCards] = useState<CardItem[]>(() => {
     const pool = challenge.rounds[0]?.cards?.length ? challenge.rounds[0].cards : (challenge.cardPool || []);
-    return ensure8Cards(pool, shuffleCards);
+    const count = challenge.rounds[0]?.cardCount || 2;
+    return getCardsForRound(pool, 0, shuffleCards, count);
   });
   const displayedCardsRef = useRef<CardItem[]>(displayedCards);
 
