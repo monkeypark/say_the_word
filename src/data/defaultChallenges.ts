@@ -128,7 +128,7 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
       {
         roundNumber: 1,
         name: 'Round 1: 基础双字 (150 BPM)',
-        bpm: 150,
+        bpm: 120,
         loopCount: 2,
         cardCount: 2,
         cards: [
@@ -139,7 +139,7 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
       {
         roundNumber: 2,
         name: 'Round 2: 三字连读 (160 BPM)',
-        bpm: 160,
+        bpm: 120,
         loopCount: 2,
         cardCount: 3,
         cards: [
@@ -151,7 +151,7 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
       {
         roundNumber: 3,
         name: 'Round 3: 四字渐进 (165 BPM)',
-        bpm: 165,
+        bpm: 120,
         loopCount: 2,
         cardCount: 4,
         cards: [
@@ -164,7 +164,7 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
       {
         roundNumber: 4,
         name: 'Round 4: 五字冲刺 (170 BPM)',
-        bpm: 170,
+        bpm: 120,
         loopCount: 2,
         cardCount: 5,
         cards: [
@@ -178,7 +178,7 @@ export const DEFAULT_CHALLENGES: Challenge[] = [
       {
         roundNumber: 5,
         name: 'Round 5: 六字大挑战 (180 BPM)',
-        bpm: 180,
+        bpm: 120,
         loopCount: 2,
         cardCount: 6,
         cards: [
