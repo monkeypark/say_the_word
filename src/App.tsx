@@ -86,9 +86,19 @@ export default function App() {
               audioLoopEndSec: 5.251,
               baseBpm: 182.8,
               introStyle: 'quick_8',
+              cardPool: (custom.cardPool || []).map(c => ({
+                ...c,
+                emoji: undefined,
+                subtext: undefined,
+              })),
               rounds: (custom.rounds || []).map(r => ({
                 ...r,
                 bpm: r.bpm || 160,
+                cards: (r.cards || []).map(c => ({
+                  ...c,
+                  emoji: undefined,
+                  subtext: undefined,
+                })),
               })),
             };
             const idx = merged.findIndex(c => c.id === sanitized.id);

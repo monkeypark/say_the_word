@@ -67,20 +67,41 @@ export interface WordPresetCategory {
 
 export const WORD_PRESETS: WordPresetCategory[] = [
   {
+    id: 'chinese-nov',
+    labelZh: '中文科11月',
+    labelEn: 'Chinese Nov',
+    icon: '📚',
+    gradient: 'from-blue-500/20 to-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300',
+    words: [
+      { word: '王' },
+      { word: '方' },
+      { word: '青' },
+      { word: '清' },
+      { word: '气' },
+      { word: '晴' },
+      { word: '情' },
+      { word: '请' },
+      { word: '生' },
+      { word: '字' },
+      { word: '左' },
+      { word: '右' },
+    ],
+  },
+  {
     id: 'fruits',
     labelZh: '水果派对',
     labelEn: 'Fruits',
     icon: '🍎',
     gradient: 'from-pink-500/20 to-rose-500/20 border-rose-500/40 text-rose-700 dark:text-rose-300',
     words: [
-      { word: '苹果', subtext: 'Apple' },
-      { word: '香蕉', subtext: 'Banana' },
-      { word: '西瓜', subtext: 'Watermelon' },
-      { word: '草莓', subtext: 'Strawberry' },
-      { word: '葡萄', subtext: 'Grape' },
-      { word: '樱桃', subtext: 'Cherry' },
-      { word: '芒果', subtext: 'Mango' },
-      { word: '水蜜桃', subtext: 'Peach' },
+      { word: '苹果' },
+      { word: '香蕉' },
+      { word: '西瓜' },
+      { word: '草莓' },
+      { word: '葡萄' },
+      { word: '樱桃' },
+      { word: '芒果' },
+      { word: '水蜜桃' },
     ],
   },
   {
@@ -90,14 +111,14 @@ export const WORD_PRESETS: WordPresetCategory[] = [
     icon: '🐱',
     gradient: 'from-amber-500/20 to-orange-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300',
     words: [
-      { word: '小猫', subtext: 'Cat' },
-      { word: '小狗', subtext: 'Dog' },
-      { word: '大熊猫', subtext: 'Panda' },
-      { word: '老虎', subtext: 'Tiger' },
-      { word: '兔子', subtext: 'Rabbit' },
-      { word: '树袋熊', subtext: 'Koala' },
-      { word: '狮子', subtext: 'Lion' },
-      { word: '小猴子', subtext: 'Monkey' },
+      { word: '小猫' },
+      { word: '小狗' },
+      { word: '大熊猫' },
+      { word: '老虎' },
+      { word: '兔子' },
+      { word: '树袋熊' },
+      { word: '狮子' },
+      { word: '小猴子' },
     ],
   },
   {
@@ -107,14 +128,14 @@ export const WORD_PRESETS: WordPresetCategory[] = [
     icon: '🍜',
     gradient: 'from-orange-500/20 to-red-500/20 border-orange-500/40 text-orange-700 dark:text-orange-300',
     words: [
-      { word: '麻辣火锅', subtext: 'Hotpot' },
-      { word: '珍珠奶茶', subtext: 'Boba Tea' },
-      { word: '碳烤生蚝', subtext: 'BBQ' },
-      { word: '手工水饺', subtext: 'Dumpling' },
-      { word: '香脆炸鸡', subtext: 'Fried Chicken' },
-      { word: '芝士披萨', subtext: 'Pizza' },
-      { word: '双层汉堡', subtext: 'Burger' },
-      { word: '日式拉面', subtext: 'Ramen' },
+      { word: '麻辣火锅' },
+      { word: '珍珠奶茶' },
+      { word: '碳烤生蚝' },
+      { word: '手工水饺' },
+      { word: '香脆炸鸡' },
+      { word: '芝士披萨' },
+      { word: '双层汉堡' },
+      { word: '日式拉面' },
     ],
   },
   {
@@ -124,14 +145,14 @@ export const WORD_PRESETS: WordPresetCategory[] = [
     icon: '🎭',
     gradient: 'from-purple-500/20 to-indigo-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300',
     words: [
-      { word: '一马当先', subtext: 'Take the lead' },
-      { word: '二龙腾飞', subtext: 'Soar high' },
-      { word: '三阳开泰', subtext: 'Good fortune' },
-      { word: '四季平安', subtext: 'Peace always' },
-      { word: '五福临门', subtext: 'Full of luck' },
-      { word: '六六大顺', subtext: 'Smooth sailing' },
-      { word: '七星高照', subtext: 'Lucky stars' },
-      { word: '八方来财', subtext: 'Prosperity' },
+      { word: '一马当先' },
+      { word: '二龙腾飞' },
+      { word: '三阳开泰' },
+      { word: '四季平安' },
+      { word: '五福临门' },
+      { word: '六六大顺' },
+      { word: '七星高照' },
+      { word: '八方来财' },
     ],
   },
   {
@@ -141,14 +162,14 @@ export const WORD_PRESETS: WordPresetCategory[] = [
     icon: '⚡',
     gradient: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-300',
     words: [
-      { word: '尊嘟假嘟', subtext: 'Really??' },
-      { word: '绝绝子', subtext: 'Awesome' },
-      { word: '泰裤辣', subtext: 'Too Cool' },
-      { word: '显眼包', subtext: 'Center of attention' },
-      { word: '挖呀挖', subtext: 'Dig dig dig' },
-      { word: '恐龙抗狼', subtext: 'Viral Beat' },
-      { word: '奥利给', subtext: 'Cheer up' },
-      { word: '栓Q', subtext: 'Thank you' },
+      { word: '尊嘟假嘟' },
+      { word: '绝绝子' },
+      { word: '泰裤辣' },
+      { word: '显眼包' },
+      { word: '挖呀挖' },
+      { word: '恐龙抗狼' },
+      { word: '奥利给' },
+      { word: '栓Q' },
     ],
   },
   {
@@ -158,14 +179,14 @@ export const WORD_PRESETS: WordPresetCategory[] = [
     icon: '🌍',
     gradient: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/40 text-cyan-700 dark:text-cyan-300',
     words: [
-      { word: 'DANCE', subtext: '跟上节奏' },
-      { word: 'FIRE', subtext: '超炸全场' },
-      { word: 'SUPER', subtext: '太厉害了' },
-      { word: 'LUCKY', subtext: '好运爆棚' },
-      { word: 'PARTY', subtext: '派对狂欢' },
-      { word: 'DREAM', subtext: '追逐梦想' },
-      { word: 'MAGIC', subtext: '魔幻时刻' },
-      { word: 'CHILL', subtext: '惬意放松' },
+      { word: 'DANCE' },
+      { word: 'FIRE' },
+      { word: 'SUPER' },
+      { word: 'LUCKY' },
+      { word: 'PARTY' },
+      { word: 'DREAM' },
+      { word: 'MAGIC' },
+      { word: 'CHILL' },
     ],
   },
 ];
@@ -306,9 +327,9 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
   );
   const [description, setDescription] = useState(
     initialChallenge?.description ||
-      (language === 'zh'
-        ? '跟随专属巴拉巴拉洗脑口哨节奏，在重拍节拍点精准喊出卡片词语！'
-        : 'Shout the word on beat with the viral Bala Bala whistle music!')
+    (language === 'zh'
+      ? '跟随专属巴拉巴拉洗脑口哨节奏，在重拍节拍点精准喊出卡片词语！'
+      : 'Shout the word on beat with the viral Bala Bala whistle music!')
   );
   const [category, setCategory] = useState(initialChallenge?.category || 'Custom');
 
@@ -333,8 +354,8 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
     initialChallenge?.cardPool && initialChallenge.cardPool.length > 0
       ? initialChallenge.cardPool
       : initialChallenge?.rounds?.[0]?.cards && initialChallenge.rounds[0].cards.length > 0
-      ? initialChallenge.rounds[0].cards
-      : defaultTrack?.cardPool || []
+        ? initialChallenge.rounds[0].cards
+        : defaultTrack?.cardPool || []
   );
 
   // Step 2: Levels State - Default to match Bala Bala Beat levels
@@ -768,8 +789,8 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
               {currentStep === 1
                 ? (language === 'zh' ? '卡片词库池' : 'Card Pool')
                 : currentStep === 2
-                ? (language === 'zh' ? '关卡层级配置' : 'Level Progression')
-                : (language === 'zh' ? '基础信息与音乐' : 'Music & Info')}
+                  ? (language === 'zh' ? '关卡层级配置' : 'Level Progression')
+                  : (language === 'zh' ? '基础信息与音乐' : 'Music & Info')}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -778,13 +799,12 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                 key={step}
                 type="button"
                 onClick={() => handleGoToStep(step as 1 | 2 | 3)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  currentStep === step
+                className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === step
                     ? 'w-7 bg-pink-500 shadow-sm shadow-pink-500/50'
                     : currentStep > step
-                    ? 'w-3 bg-emerald-500 hover:opacity-80'
-                    : 'w-3 bg-slate-300 hover:bg-slate-400'
-                }`}
+                      ? 'w-3 bg-emerald-500 hover:opacity-80'
+                      : 'w-3 bg-slate-300 hover:bg-slate-400'
+                  }`}
                 title={language === 'zh' ? `跳转至第 ${step} 步` : `Go to step ${step}`}
               />
             ))}
@@ -824,11 +844,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                   <button
                     type="button"
                     onClick={() => setViewMode('chips')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      viewMode === 'chips'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'chips'
                         ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     <Tag className="w-3.5 h-3.5" />
                     <span>{language === 'zh' ? '快速标签' : 'Fast Tags'}</span>
@@ -836,11 +855,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                   <button
                     type="button"
                     onClick={() => setViewMode('cards')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      viewMode === 'cards'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'cards'
                         ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     <Grid className="w-3.5 h-3.5" />
                     <span>{language === 'zh' ? '详细卡片' : 'Detail Cards'}</span>
@@ -848,13 +866,12 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                 </div>
 
                 <div
-                  className={`px-3 py-1.5 rounded-xl border text-xs font-black flex items-center gap-1.5 ${
-                    cardPool.length < 2
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-black flex items-center gap-1.5 ${cardPool.length < 2
                       ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
                       : cardPool.length >= 8
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                      : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'
-                  }`}
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'
+                    }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>
@@ -1249,9 +1266,8 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                                 key={c}
                                 type="button"
                                 onClick={() => handlePoolCardChange(cIdx, 'color', c)}
-                                className={`w-3.5 h-3.5 rounded-full border transition-transform ${
-                                  card.color === c ? 'border-white scale-125' : 'border-transparent'
-                                }`}
+                                className={`w-3.5 h-3.5 rounded-full border transition-transform ${card.color === c ? 'border-white scale-125' : 'border-transparent'
+                                  }`}
                                 style={{ backgroundColor: c }}
                               />
                             ))}
@@ -1399,11 +1415,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                       key={num}
                       type="button"
                       onClick={() => handleSetNumberOfRounds(num)}
-                      className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
-                        isSelected
+                      className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${isSelected
                           ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30 ring-2 ring-purple-400/50'
                           : 'bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-700'
-                      }`}
+                        }`}
                     >
                       {num} {language === 'zh' ? '关' : 'Levels'}
                     </button>
@@ -1493,11 +1508,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                 <button
                   type="button"
                   onClick={() => setShuffleCards(!shuffleCards)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
-                    shuffleCards
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${shuffleCards
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-800'
-                  }`}
+                    }`}
                 >
                   <span>{shuffleCards ? (language === 'zh' ? '已开启乱序' : 'Shuffle ON') : (language === 'zh' ? '固定顺序' : 'Fixed')}</span>
                   {shuffleCards && <Check className="w-3.5 h-3.5" />}
@@ -1713,11 +1727,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                           soundEngine.playCustomTrack(0, 0, 1.0, undefined, rate);
                         }
                       }}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shrink-0 ${
-                        isPlayingCustomAudio
+                      className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shrink-0 ${isPlayingCustomAudio
                           ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30 ring-2 ring-pink-400'
                           : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-pink-700 dark:text-pink-300 border border-pink-500/30'
-                      }`}
+                        }`}
                     >
                       {isPlayingCustomAudio ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                       <span>{isPlayingCustomAudio ? (language === 'zh' ? '停止试听' : 'Stop') : (language === 'zh' ? '试听伴奏' : 'Preview Beat')}</span>
@@ -1878,12 +1891,12 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                   ? `步骤 1: 文字词库池 (${cardPool.length} 个文字)`
                   : `Step 1: Word Pool (${cardPool.length} words)`
                 : currentStep === 2
-                ? language === 'zh'
-                  ? `步骤 2: 关卡层级 (${rounds.length} 关)`
-                  : `Step 2: Levels Hierarchy (${rounds.length} levels)`
-                : language === 'zh'
-                ? `步骤 3: 基础资料与伴奏`
-                : `Step 3: Identity & Soundtrack`}
+                  ? language === 'zh'
+                    ? `步骤 2: 关卡层级 (${rounds.length} 关)`
+                    : `Step 2: Levels Hierarchy (${rounds.length} levels)`
+                  : language === 'zh'
+                    ? `步骤 3: 基础资料与伴奏`
+                    : `Step 3: Identity & Soundtrack`}
             </span>
           </div>
 
@@ -1893,11 +1906,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
               type="button"
               onClick={() => handleGoToStep((currentStep - 1) as 1 | 2 | 3)}
               disabled={currentStep === 1}
-              className={`flex items-center gap-1 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-colors ${
-                currentStep === 1
+              className={`flex items-center gap-1 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-colors ${currentStep === 1
                   ? 'border-slate-200 text-slate-600 dark:text-slate-400 bg-slate-100 cursor-not-allowed opacity-60'
                   : 'border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+                }`}
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">{language === 'zh' ? '上一步' : 'Prev'}</span>
@@ -1907,11 +1919,10 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
               type="button"
               onClick={() => handleGoToStep((currentStep + 1) as 1 | 2 | 3)}
               disabled={currentStep === 3}
-              className={`flex items-center gap-1 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-colors ${
-                currentStep === 3
+              className={`flex items-center gap-1 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-colors ${currentStep === 3
                   ? 'border-slate-200 text-slate-600 dark:text-slate-400 bg-slate-100 cursor-not-allowed opacity-60'
                   : 'border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+                }`}
             >
               <span className="hidden sm:inline">{language === 'zh' ? '下一步' : 'Next'}</span>
               <ArrowRight className="w-4 h-4" />

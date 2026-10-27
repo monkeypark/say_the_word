@@ -174,9 +174,8 @@ export const ChallengeList: React.FC<ChallengeListProps> = ({
                   {sampleCards.slice(0, 4).map((card, i) => (
                     <div
                       key={`sample-card-${item.id}-${card.id || i}-${i}`}
-                      className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/60 text-center shadow-2xs"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/60 text-center shadow-2xs min-h-[52px]"
                     >
-                      <span className="text-xl mb-1">{card.emoji || '✨'}</span>
                       <span className="text-xs font-black text-slate-900 dark:text-slate-100 truncate w-full">
                         {card.word}
                       </span>
