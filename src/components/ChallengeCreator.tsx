@@ -358,31 +358,58 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
         : defaultTrack?.cardPool || []
   );
 
-  // Step 2: Levels State - Default to match Bala Bala Beat levels
+  // Step 2: Levels State - Default 5 rounds (2, 3, 4, 5, 6 words)
   const [rounds, setRounds] = useState<RoundConfig[]>(
     initialChallenge?.rounds?.map((r, idx) => ({
       ...r,
       roundNumber: idx + 1,
-      cardCount: r.cardCount !== undefined ? r.cardCount : (r.cards?.length || 8),
+      cardCount: r.cardCount !== undefined ? r.cardCount : (idx + 2),
       loopCount: 2,
     })) || [
       {
         roundNumber: 1,
-        name: language === 'zh' ? '第 1 关: 慢速试温' : 'Level 1: Warmup',
-        bpm: 160,
+        name: language === 'zh' ? '第 1 关: 双词试温 (150 BPM)' : 'Round 1: Warmup (150 BPM)',
+        bpm: 150,
         loopCount: 2,
         textOnly: false,
-        cards: defaultTrack?.rounds?.[0]?.cards || [],
-        cardCount: 8,
+        cards: [],
+        cardCount: 2,
       },
       {
         roundNumber: 2,
-        name: language === 'zh' ? '第 2 关: 节奏拉满' : 'Level 2: Speed Up',
+        name: language === 'zh' ? '第 2 关: 三连卡点 (160 BPM)' : 'Round 2: Triplet (160 BPM)',
         bpm: 160,
         loopCount: 2,
         textOnly: false,
-        cards: defaultTrack?.rounds?.[1]?.cards || [],
-        cardCount: 8,
+        cards: [],
+        cardCount: 3,
+      },
+      {
+        roundNumber: 3,
+        name: language === 'zh' ? '第 3 关: 四拍渐进 (165 BPM)' : 'Round 3: Quad Beat (165 BPM)',
+        bpm: 165,
+        loopCount: 2,
+        textOnly: false,
+        cards: [],
+        cardCount: 4,
+      },
+      {
+        roundNumber: 4,
+        name: language === 'zh' ? '第 4 关: 五词连击 (170 BPM)' : 'Round 4: Fast Five (170 BPM)',
+        bpm: 170,
+        loopCount: 2,
+        textOnly: false,
+        cards: [],
+        cardCount: 5,
+      },
+      {
+        roundNumber: 5,
+        name: language === 'zh' ? '第 5 关: 六连终极 (180 BPM)' : 'Round 5: Six Speed (180 BPM)',
+        bpm: 180,
+        loopCount: 2,
+        textOnly: false,
+        cards: [],
+        cardCount: 6,
       },
     ]
   );
@@ -645,7 +672,7 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
 
     let accumulatedCards: CardItem[] = [];
     const builtRounds: RoundConfig[] = rounds.map((r, idx) => {
-      const targetCount = r.cardCount !== undefined ? r.cardCount : 4;
+      const targetCount = r.cardCount !== undefined ? r.cardCount : (idx + 2);
 
       if (idx === 0) {
         const poolCopy = [...pool];

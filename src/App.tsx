@@ -9,7 +9,7 @@ import { GameBoard } from './components/GameBoard';
 import { ChallengeList } from './components/ChallengeList';
 import { ChallengeCreator } from './components/ChallengeCreator';
 import { DEFAULT_CHALLENGES, VIRAL_CLASSICS_MUSIC } from './data/defaultChallenges';
-import { Challenge } from './types/game';
+import { Challenge, RoundConfig, CardItem } from './types/game';
 import { soundEngine } from './services/soundEngine';
 import { AdService } from './services/adService';
 import { AdBanner } from './components/AdBanner';
@@ -74,6 +74,42 @@ export default function App() {
           // Merge custom challenges, replacing default ones with the same ID if necessary
           const merged = [...DEFAULT_CHALLENGES];
           parsed.forEach((custom: Challenge) => {
+            // Do not override built-in default challenges from localStorage
+            if (DEFAULT_CHALLENGES.some(dc => dc.id === custom.id)) {
+              return;
+            }
+
+            const pool = (custom.cardPool && custom.cardPool.length > 0)
+              ? custom.cardPool
+              : (custom.rounds?.[0]?.cards || []);
+
+            const targetRoundCounts = [2, 3, 4, 5, 6];
+            const baseRounds = (custom.rounds && custom.rounds.length > 0) ? custom.rounds : [];
+            const fiveRounds: RoundConfig[] = targetRoundCounts.map((neededCards, rIdx) => {
+              const existingRound = baseRounds[rIdx];
+              const roundBpm = existingRound?.bpm || (150 + rIdx * 5);
+              const roundName = existingRound?.name || (language === 'zh' ? `第 ${rIdx + 1} 关 (${neededCards} 词 · ${roundBpm} BPM)` : `Round ${rIdx + 1} (${neededCards} words · ${roundBpm} BPM)`);
+              const basePool = pool.length > 0 ? pool : [{ id: 'c1', word: '词语' }];
+              const cards: CardItem[] = [];
+              for (let i = 0; i < neededCards; i++) {
+                const card = basePool[i % basePool.length];
+                cards.push({
+                  ...card,
+                  id: `${card.id || 'c'}-r${rIdx + 1}-${i}`,
+                  emoji: undefined,
+                  subtext: undefined,
+                });
+              }
+              return {
+                roundNumber: rIdx + 1,
+                name: roundName,
+                bpm: roundBpm,
+                loopCount: 2,
+                cardCount: neededCards,
+                cards,
+              };
+            });
+
             // Ensure every challenge uses beat.mp3 as universal game music
             const sanitized: Challenge = {
               ...custom,
@@ -86,20 +122,12 @@ export default function App() {
               audioLoopEndSec: 5.251,
               baseBpm: 182.8,
               introStyle: 'quick_8',
-              cardPool: (custom.cardPool || []).map(c => ({
+              cardPool: pool.map(c => ({
                 ...c,
                 emoji: undefined,
                 subtext: undefined,
               })),
-              rounds: (custom.rounds || []).map(r => ({
-                ...r,
-                bpm: r.bpm || 160,
-                cards: (r.cards || []).map(c => ({
-                  ...c,
-                  emoji: undefined,
-                  subtext: undefined,
-                })),
-              })),
+              rounds: fiveRounds,
             };
             const idx = merged.findIndex(c => c.id === sanitized.id);
             if (idx !== -1) {

@@ -345,7 +345,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     // Only shuffle and set cards if starting a new round (demo phase)
     if (phase === 'demo') {
       const pool = roundToPlay.cards?.length ? roundToPlay.cards : (challenge.cardPool || []);
-      const initialCards = ensure8Cards(pool, shuffleCards);
+      const count = roundToPlay.cardCount || (safeTargetIdx + 2);
+      const initialCards = getCardsForRound(pool, safeTargetIdx, shuffleCards, count);
       setDisplayedCards(initialCards);
       displayedCardsRef.current = initialCards;
       setIsPreLoop(true);
@@ -839,7 +840,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              <div className={`grid gap-2 ${displayedCards.length <= 2 ? 'grid-cols-2 max-w-sm mx-auto' : displayedCards.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3 sm:grid-cols-6'}`}>
                 {displayedCards.map((card, idx) => (
                   <div
                     key={`preview-card-${card.id || idx}-${idx}`}
@@ -940,7 +941,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     const newSetting = !shuffleCards;
                     setShuffleCards(newSetting);
                     const pool = currentRound.cards?.length ? currentRound.cards : (challenge.cardPool || []);
-                    const res = ensure8Cards(pool, newSetting);
+                    const count = currentRound.cardCount || (safeRoundIdx + 2);
+                    const res = getCardsForRound(pool, safeRoundIdx, newSetting, count);
                     setDisplayedCards(res);
                     displayedCardsRef.current = res;
                   }}
@@ -962,7 +964,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     type="button"
                     onClick={() => {
                       const pool = currentRound.cards?.length ? currentRound.cards : (challenge.cardPool || []);
-                      const res = ensure8Cards(pool, true);
+                      const count = currentRound.cardCount || (safeRoundIdx + 2);
+                      const res = getCardsForRound(pool, safeRoundIdx, true, count);
                       setDisplayedCards(res);
                       displayedCardsRef.current = res;
                     }}

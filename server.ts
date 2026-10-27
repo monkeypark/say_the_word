@@ -29,7 +29,7 @@ app.post('/api/generate-challenge', async (req, res) => {
       });
     }
 
-    const { prompt, language = 'zh-CN', roundsCount = 4, startBpm = 160, cardsPerRound = 4, textOnly = false } = req.body;
+    const { prompt, language = 'zh-CN', roundsCount = 5, startBpm = 150, textOnly = true } = req.body;
 
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'Prompt is required' });
@@ -38,11 +38,11 @@ app.post('/api/generate-challenge', async (req, res) => {
     const ai = new GoogleGenAI({ apiKey });
 
     const systemPrompt = `You are a rhythm game designer for the viral party game "Speak on the Beat".
-Create a fun, rhythmic, catchy challenge with ${roundsCount} rounds based on the topic: "${prompt}".
+Create a fun, rhythmic, catchy challenge with 5 progressive rounds based on the topic: "${prompt}".
 Target language: ${language === 'zh-CN' ? 'Chinese (Simplified)' : 'English'}.
 Rules:
-1. Each round has EXACTLY ${cardsPerRound} cards.
-2. ${textOnly ? 'PURE TEXT MODE: Do not include emojis. Focus on bold, rhythmic phrases, idioms, or rhyming words.' : 'Words can have an emoji.'}
+1. There are EXACTLY 5 rounds with progressive card count: Round 1 has 2 cards, Round 2 has 3 cards, Round 3 has 4 cards, Round 4 has 5 cards, Round 5 has 6 cards.
+2. ${textOnly ? 'PURE TEXT MODE: Do not include emojis or subtexts. Focus on bold, rhythmic single words or short phrases.' : 'Words can have an emoji.'}
 3. Words should be punchy, rhythmic, easy to shout on the beat (1-4 syllables/characters).
 4. The tempo starts at ${startBpm} BPM and increases each round (e.g. +15 to +20 BPM per round).
 5. Each card needs:

@@ -122,7 +122,7 @@ export const ChallengeList: React.FC<ChallengeListProps> = ({
         {challenges.map((item) => {
           const firstBpm = item.rounds[0]?.bpm || 160;
           const lastBpm = item.rounds[item.rounds.length - 1]?.bpm || 180;
-          const sampleCards = item.rounds[0]?.cards || [];
+          const sampleCards = (item.cardPool && item.cardPool.length > 0) ? item.cardPool : (item.rounds[0]?.cards || []);
           const isDefaultTrack = item.id === 'bala-bala-challenge';
 
           return (
