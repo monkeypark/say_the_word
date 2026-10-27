@@ -83,16 +83,17 @@ export default function App() {
               ? custom.cardPool
               : (custom.rounds?.[0]?.cards || []);
 
-            const targetRoundCounts = [2, 3, 4, 5, 6];
+            const targetUniqueCounts = [2, 3, 4, 5, 6];
             const baseRounds = (custom.rounds && custom.rounds.length > 0) ? custom.rounds : [];
-            const fiveRounds: RoundConfig[] = targetRoundCounts.map((neededCards, rIdx) => {
+            const fiveRounds: RoundConfig[] = targetUniqueCounts.map((uniqueCount, rIdx) => {
               const existingRound = baseRounds[rIdx];
               const roundBpm = existingRound?.bpm || (150 + rIdx * 5);
-              const roundName = existingRound?.name || (language === 'zh' ? `第 ${rIdx + 1} 关 (${neededCards} 词 · ${roundBpm} BPM)` : `Round ${rIdx + 1} (${neededCards} words · ${roundBpm} BPM)`);
+              const roundName = existingRound?.name || (language === 'zh' ? `第 ${rIdx + 1} 关 (${roundBpm} BPM)` : `Round ${rIdx + 1} (${roundBpm} BPM)`);
               const basePool = pool.length > 0 ? pool : [{ id: 'c1', word: '词语' }];
+              const uniqueSlice = basePool.slice(0, uniqueCount);
               const cards: CardItem[] = [];
-              for (let i = 0; i < neededCards; i++) {
-                const card = basePool[i % basePool.length];
+              for (let i = 0; i < 8; i++) {
+                const card = uniqueSlice[i % uniqueSlice.length];
                 cards.push({
                   ...card,
                   id: `${card.id || 'c'}-r${rIdx + 1}-${i}`,
@@ -105,7 +106,7 @@ export default function App() {
                 name: roundName,
                 bpm: roundBpm,
                 loopCount: 2,
-                cardCount: neededCards,
+                cardCount: 8,
                 cards,
               };
             });

@@ -358,58 +358,58 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
         : defaultTrack?.cardPool || []
   );
 
-  // Step 2: Levels State - Default 5 rounds (2, 3, 4, 5, 6 words)
+  // Step 2: Levels State - Default 5 rounds (8 words each round)
   const [rounds, setRounds] = useState<RoundConfig[]>(
     initialChallenge?.rounds?.map((r, idx) => ({
       ...r,
       roundNumber: idx + 1,
-      cardCount: r.cardCount !== undefined ? r.cardCount : (idx + 2),
+      cardCount: r.cardCount !== undefined ? r.cardCount : 8,
       loopCount: 2,
     })) || [
       {
         roundNumber: 1,
-        name: language === 'zh' ? '第 1 关: 双词试温 (150 BPM)' : 'Round 1: Warmup (150 BPM)',
+        name: language === 'zh' ? '第 1 关 (150 BPM)' : 'Round 1 (150 BPM)',
         bpm: 150,
         loopCount: 2,
         textOnly: false,
         cards: [],
-        cardCount: 2,
+        cardCount: 8,
       },
       {
         roundNumber: 2,
-        name: language === 'zh' ? '第 2 关: 三连卡点 (160 BPM)' : 'Round 2: Triplet (160 BPM)',
+        name: language === 'zh' ? '第 2 关 (160 BPM)' : 'Round 2 (160 BPM)',
         bpm: 160,
         loopCount: 2,
         textOnly: false,
         cards: [],
-        cardCount: 3,
+        cardCount: 8,
       },
       {
         roundNumber: 3,
-        name: language === 'zh' ? '第 3 关: 四拍渐进 (165 BPM)' : 'Round 3: Quad Beat (165 BPM)',
+        name: language === 'zh' ? '第 3 关 (165 BPM)' : 'Round 3 (165 BPM)',
         bpm: 165,
         loopCount: 2,
         textOnly: false,
         cards: [],
-        cardCount: 4,
+        cardCount: 8,
       },
       {
         roundNumber: 4,
-        name: language === 'zh' ? '第 4 关: 五词连击 (170 BPM)' : 'Round 4: Fast Five (170 BPM)',
+        name: language === 'zh' ? '第 4 关 (170 BPM)' : 'Round 4 (170 BPM)',
         bpm: 170,
         loopCount: 2,
         textOnly: false,
         cards: [],
-        cardCount: 5,
+        cardCount: 8,
       },
       {
         roundNumber: 5,
-        name: language === 'zh' ? '第 5 关: 六连终极 (180 BPM)' : 'Round 5: Six Speed (180 BPM)',
+        name: language === 'zh' ? '第 5 关 (180 BPM)' : 'Round 5 (180 BPM)',
         bpm: 180,
         loopCount: 2,
         textOnly: false,
         cards: [],
-        cardCount: 6,
+        cardCount: 8,
       },
     ]
   );
@@ -458,7 +458,7 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
           initialChallenge.rounds.map((r, idx) => ({
             ...r,
             roundNumber: idx + 1,
-            cardCount: r.cardCount !== undefined ? r.cardCount : 4,
+            cardCount: r.cardCount !== undefined ? r.cardCount : 8,
             loopCount: 2,
           }))
         );
@@ -670,39 +670,22 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
         ? cardPool
         : [{ id: 'c1', word: '苹果', subtext: 'Apple', emoji: '🍎', color: '#ef4444' }];
 
-    let accumulatedCards: CardItem[] = [];
     const builtRounds: RoundConfig[] = rounds.map((r, idx) => {
-      const targetCount = r.cardCount !== undefined ? r.cardCount : (idx + 2);
+      const targetCount = r.cardCount !== undefined ? r.cardCount : 8;
+      const uniqueCount = Math.min(pool.length, idx + 2);
 
-      if (idx === 0) {
-        const poolCopy = [...pool];
-        while (poolCopy.length < targetCount && poolCopy.length > 0) {
-          poolCopy.push(...pool);
-        }
-        const shuffled = shuffleCardsArray(poolCopy);
-        accumulatedCards = shuffled.slice(0, targetCount);
-      } else {
-        const existingIds = new Set(accumulatedCards.map((c) => c.id));
-        const remainingPool = pool.filter((c) => !existingIds.has(c.id));
-
-        let currentRoundCards = [...accumulatedCards];
-        if (currentRoundCards.length < targetCount) {
-          const needed = targetCount - currentRoundCards.length;
-          const shuffledRemaining = shuffleCardsArray(remainingPool.length > 0 ? remainingPool : pool);
-          currentRoundCards.push(...shuffledRemaining.slice(0, needed));
-        } else {
-          if (remainingPool.length > 0) {
-            const newCard = remainingPool[Math.floor(Math.random() * remainingPool.length)];
-            currentRoundCards[Math.floor(Math.random() * currentRoundCards.length)] = newCard;
-          }
-        }
-        accumulatedCards = currentRoundCards;
+      // Pick uniqueCount words from pool and repeat to targetCount (8)
+      const poolSlice = pool.slice(0, uniqueCount);
+      const roundCards: CardItem[] = [];
+      for (let i = 0; i < targetCount; i++) {
+        roundCards.push(poolSlice[i % poolSlice.length]);
       }
 
       return {
         ...r,
         roundNumber: idx + 1,
-        cards: shuffleCards ? shuffleCardsArray([...accumulatedCards]) : [...accumulatedCards],
+        cardCount: targetCount,
+        cards: shuffleCards ? shuffleCardsArray([...roundCards]) : [...roundCards],
       };
     });
 

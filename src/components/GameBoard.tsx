@@ -45,13 +45,22 @@ function shuffleCardsArray(cards: CardItem[]): CardItem[] {
   return shuffled;
 }
 
-// Pick cards for each round: Round 1 (2 words), Round 2 (3 words), Round 3 (4 words), Round 4 (5 words), Round 5 (6 words)
+// Pick cards for each round: 8 cards total.
+// Round 1 picks 2 unique words repeated, Round 2 picks 3 unique words repeated, etc.
 function getCardsForRound(pool: CardItem[], roundIdx: number, shuffle: boolean, targetCount?: number): CardItem[] {
   if (!pool || pool.length === 0) return [];
-  const count = (targetCount && targetCount > 0) ? targetCount : (roundIdx + 2);
-  const base = shuffle ? shuffleCardsArray(pool) : [...pool];
+  const count = (targetCount && targetCount > 0) ? targetCount : 8;
+  const uniqueCount = Math.min(pool.length, roundIdx + 2);
+
+  let base: CardItem[];
+  if (pool.length > count || (pool.length > uniqueCount && pool.length < count)) {
+    const poolSource = shuffle ? shuffleCardsArray(pool) : [...pool];
+    base = poolSource.slice(0, uniqueCount);
+  } else {
+    base = shuffle ? shuffleCardsArray(pool) : [...pool];
+  }
+
   if (base.length === count) return base;
-  if (base.length > count) return base.slice(0, count);
 
   // Pad up to count cards by cycling through base
   const result: CardItem[] = [];
@@ -64,7 +73,7 @@ function getCardsForRound(pool: CardItem[], roundIdx: number, shuffle: boolean, 
       });
     }
   }
-  return result;
+  return shuffle ? shuffleCardsArray(result) : result;
 }
 
 interface GameBoardProps {
@@ -145,10 +154,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     challenge.shuffleCards !== undefined ? challenge.shuffleCards : true
   );
 
-  // Active displayed cards (Round 1: 2 words, Round 2: 3 words, Round 3: 4 words...)
+  // Active displayed cards (8 words per round)
   const [displayedCards, setDisplayedCards] = useState<CardItem[]>(() => {
     const pool = challenge.rounds[0]?.cards?.length ? challenge.rounds[0].cards : (challenge.cardPool || []);
-    const count = challenge.rounds[0]?.cardCount || 2;
+    const count = challenge.rounds[0]?.cardCount || 8;
     return getCardsForRound(pool, 0, shuffleCards, count);
   });
   const displayedCardsRef = useRef<CardItem[]>(displayedCards);
@@ -345,7 +354,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     // Only shuffle and set cards if starting a new round (demo phase)
     if (phase === 'demo') {
       const pool = roundToPlay.cards?.length ? roundToPlay.cards : (challenge.cardPool || []);
-      const count = roundToPlay.cardCount || (safeTargetIdx + 2);
+      const count = roundToPlay.cardCount || 8;
       const initialCards = getCardsForRound(pool, safeTargetIdx, shuffleCards, count);
       setDisplayedCards(initialCards);
       displayedCardsRef.current = initialCards;
@@ -941,7 +950,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     const newSetting = !shuffleCards;
                     setShuffleCards(newSetting);
                     const pool = currentRound.cards?.length ? currentRound.cards : (challenge.cardPool || []);
-                    const count = currentRound.cardCount || (safeRoundIdx + 2);
+                    const count = currentRound.cardCount || 8;
                     const res = getCardsForRound(pool, safeRoundIdx, newSetting, count);
                     setDisplayedCards(res);
                     displayedCardsRef.current = res;
@@ -964,7 +973,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     type="button"
                     onClick={() => {
                       const pool = currentRound.cards?.length ? currentRound.cards : (challenge.cardPool || []);
-                      const count = currentRound.cardCount || (safeRoundIdx + 2);
+                      const count = currentRound.cardCount || 8;
                       const res = getCardsForRound(pool, safeRoundIdx, true, count);
                       setDisplayedCards(res);
                       displayedCardsRef.current = res;
