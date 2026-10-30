@@ -169,17 +169,15 @@ export const ChallengeList: React.FC<ChallengeListProps> = ({
                   {item.description || (language === 'zh' ? '跟着强劲节拍，大声说出卡片内容！' : 'Shout the word on beat!')}
                 </p>
 
-                {/* 4 Card Preview Strip (High contrast cards) */}
-                <div className="grid grid-cols-4 gap-2 mb-5">
-                  {sampleCards.slice(0, 4).map((card, i) => (
-                    <div
+                {/* Challenge Words Preview Strip (Show all words for the challenge) */}
+                <div className="flex flex-wrap gap-1.5 mb-5 max-h-28 overflow-y-auto">
+                  {sampleCards.map((card, i) => (
+                    <span
                       key={`sample-card-${item.id}-${card.id || i}-${i}`}
-                      className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/60 text-center shadow-2xs min-h-[52px]"
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs"
                     >
-                      <span className="text-xs font-black text-slate-900 dark:text-slate-100 truncate w-full">
-                        {card.word}
-                      </span>
-                    </div>
+                      {card.word}
+                    </span>
                   ))}
                 </div>
               </div>
