@@ -13,6 +13,8 @@ import { Challenge, RoundConfig, CardItem } from './types/game';
 import { soundEngine } from './services/soundEngine';
 import { AdService } from './services/adService';
 import { AdBanner } from './components/AdBanner';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { ShieldCheck } from 'lucide-react';
 
 const STORAGE_KEY_CUSTOM_CHALLENGES = 'say_the_word_custom_challenges_v1';
 const STORAGE_KEY_LANGUAGE = 'say_the_word_language_v1';
@@ -22,6 +24,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'play' | 'create' | 'customList'>('play');
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
   // Settings
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
@@ -423,6 +426,14 @@ export default function App() {
             <span className="font-black text-pink-400">SPEAK ON THE BEAT</span>
             <span>•</span>
             <span>{language === 'zh' ? '卡点报词节奏挑战' : 'Viral Rhythm Game'}</span>
+            <span>•</span>
+            <button
+              onClick={() => setIsPrivacyModalOpen(true)}
+              className="hover:text-pink-500 underline font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-pink-500" />
+              <span>{language === 'zh' ? '隐私政策与条款 (Privacy Policy)' : 'Privacy Policy'}</span>
+            </button>
           </div>
           <p>
             {language === 'zh'
@@ -431,6 +442,13 @@ export default function App() {
           </p>
         </div>
       </footer>
+
+      {/* Privacy Policy Modal for Google AdSense compliance */}
+      <PrivacyPolicyModal
+        isOpen={isPrivacyModalOpen}
+        onClose={() => setIsPrivacyModalOpen(false)}
+        language={language}
+      />
 
       {/* Google AdSense Bottom Banner at the absolute bottom of page */}
       <AdBanner language={language} />
